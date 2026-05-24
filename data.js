@@ -4,7 +4,7 @@
 
 // Cloud sync — create a free account at jsonbin.io, make a bin with
 // content {"users":[]}, then paste the Bin ID and Master Key below.
-const CLOUD_BIN_ID  = '6a12eb386877513b27c4f44a';
+const CLOUD_BIN_ID  = '6a1325256877513b27c659ba';
 const CLOUD_API_KEY = '$2a$10$FfjD8wJ8SR0.F4RbgG4rIumA8oCoU0HCuP6Gp8aXrydIY4vgNI.iy';
 
 const GROUPS = {

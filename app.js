@@ -41,6 +41,7 @@ function createEmptyPredictions() {
     r16: {},
     qf: {},
     sf: {},
+    thirdplace: null,
     final: null,
   };
 }
@@ -467,17 +468,18 @@ function renderBracket() {
 
 function renderStageTabsProgress() {
   const picks = currentUser.predictions;
-  const stages = ['groups', 'r32', 'r16', 'qf', 'sf', 'final'];
-  const totals = { groups: 12, r32: 16, r16: 8, qf: 4, sf: 2, final: 1 };
+  const stages = ['groups', 'r32', 'r16', 'qf', 'sf', 'thirdplace', 'final'];
+  const totals = { groups: 12, r32: 16, r16: 8, qf: 4, sf: 2, thirdplace: 1, final: 1 };
   const done = {
     groups: Object.values(picks.groups).filter(g => g.first && g.second).length,
     r32: Object.keys(picks.r32).length,
     r16: Object.keys(picks.r16).length,
     qf: Object.keys(picks.qf).length,
     sf: Object.keys(picks.sf).length,
+    thirdplace: picks.thirdplace ? 1 : 0,
     final: picks.final ? 1 : 0,
   };
-  const labels = { groups: 'Groups', r32: 'Round of 32', r16: 'Round of 16', qf: 'Quarter-Finals', sf: 'Semi-Finals', final: 'Final' };
+  const labels = { groups: 'Groups', r32: 'Round of 32', r16: 'Round of 16', qf: 'Quarter-Finals', sf: 'Semi-Finals', thirdplace: '3rd Place', final: 'Final' };
 
   document.getElementById('stage-tabs').innerHTML = stages.map(s => {
     const isComplete = done[s] >= totals[s];
@@ -502,6 +504,7 @@ function showStage(stage) {
     case 'r16': container.innerHTML = renderKnockoutStage('r16', R16_BRACKET, 'Round of 16', 'Pick the winner of each Round of 16 match'); break;
     case 'qf': container.innerHTML = renderKnockoutStage('qf', QF_BRACKET, 'Quarter-Finals', 'Pick your quarter-final winners'); break;
     case 'sf': container.innerHTML = renderKnockoutStage('sf', SF_BRACKET, 'Semi-Finals', 'Pick your semi-final winners'); break;
+    case 'thirdplace': container.innerHTML = renderThirdPlaceStage(); break;
     case 'final': container.innerHTML = renderFinalStage(); break;
   }
 }
@@ -515,7 +518,7 @@ function renderGroupsStage() {
     <div class="bracket-hero">
       <div>
         <h2 class="bracket-title">Group Stage Predictions</h2>
-        <p class="bracket-desc">Click teams to select who you think will finish 1st (gold) and 2nd (green) in each group.<br>The top 2 from each group advance to the knockout stage.</p>
+        <p class="bracket-desc">Click teams to select who you think will finish 1st (gold) and 2nd (green) in each group.<br>The top 2 from each group advance directly to the Round of 32. The best 8 third-placed teams also qualify.</p>
       </div>
       <div class="bracket-progress-rings">
         <div class="progress-ring-item">
@@ -619,12 +622,12 @@ function renderKnockoutStage(stageKey, bracketDef, title, desc) {
     const team1 = resolveSlot(match.from ? `winner_${match.from[0]}` : match.slot1, picks);
     const team2 = resolveSlot(match.from ? `winner_${match.from[1]}` : match.slot2, picks);
     const winner = stagePicks[match.id];
-    return renderMatchCard(stageKey, match.id, team1, team2, winner, match.from ? match.from : [match.slot1, match.slot2]);
+    return renderMatchCard(stageKey, match.id, team1, team2, winner, match.from ? match.from : [match.slot1, match.slot2], match.thirdLabel);
   }).join('');
 
   // Determine next stage button
-  const nextStages = { r32: 'r16', r16: 'qf', qf: 'sf', sf: 'final' };
-  const prevStages = { r32: 'groups', r16: 'r32', qf: 'r16', sf: 'qf', final: 'sf' };
+  const nextStages = { r32: 'r16', r16: 'qf', qf: 'sf', sf: 'thirdplace', thirdplace: 'final' };
+  const prevStages = { r32: 'groups', r16: 'r32', qf: 'r16', sf: 'qf', thirdplace: 'sf', final: 'thirdplace' };
 
   return `
     <div class="bracket-hero">
@@ -651,7 +654,7 @@ function renderKnockoutStage(stageKey, bracketDef, title, desc) {
   `;
 }
 
-function renderMatchCard(stageKey, matchId, team1Id, team2Id, winnerId, slots) {
+function renderMatchCard(stageKey, matchId, team1Id, team2Id, winnerId, slots, thirdLabel) {
   const t1 = team1Id ? TEAMS[team1Id] : null;
   const t2 = team2Id ? TEAMS[team2Id] : null;
   const isDone = !!winnerId;
@@ -679,7 +682,7 @@ function renderMatchCard(stageKey, matchId, team1Id, team2Id, winnerId, slots) {
       <div class="match-card-body">
         ${renderTeamSlot(team1Id, Array.isArray(slots) ? slots[0] : 'TBD', team1Id === winnerId)}
         <div class="match-vs-divider">VS</div>
-        ${renderTeamSlot(team2Id, Array.isArray(slots) ? slots[1] : 'TBD', team2Id === winnerId)}
+        ${renderTeamSlot(team2Id, team2Id ? (Array.isArray(slots) ? slots[1] : 'TBD') : (thirdLabel || (Array.isArray(slots) ? slots[1] : 'TBD')), team2Id === winnerId)}
       </div>
     </div>
   `;
@@ -769,6 +772,68 @@ function renderFinalStage() {
   `;
 }
 
+function renderThirdPlaceStage() {
+  const picks = currentUser.predictions;
+
+  // Derive SF losers: each SF has two participants from QF; loser = participant who isn't the winner
+  function getSFLoser(sfId, qf1Id, qf2Id) {
+    const sfWinner = picks.sf[sfId];
+    if (!sfWinner) return null;
+    const p1 = picks.qf[qf1Id] || null;
+    const p2 = picks.qf[qf2Id] || null;
+    return [p1, p2].find(t => t && t !== sfWinner) || null;
+  }
+
+  const loser1 = getSFLoser('SF_1', 'QF_1', 'QF_2');
+  const loser2 = getSFLoser('SF_2', 'QF_3', 'QF_4');
+  const thirdWinner = picks.thirdplace;
+
+  const renderContestant = (teamId, label) => {
+    if (!teamId) {
+      return `
+        <div style="background:var(--surface-2);border:2px dashed var(--border);border-radius:12px;padding:1.5rem;text-align:center;color:var(--text-dim)">
+          <div style="font-size:2rem;margin-bottom:0.5rem">❓</div>
+          <div style="font-size:0.875rem">${label} — pick Semi-Final winners first</div>
+          <button class="btn btn-ghost btn-sm" style="margin-top:0.75rem" onclick="showStage('sf')">Go to Semi-Finals</button>
+        </div>
+      `;
+    }
+    const team = TEAMS[teamId];
+    const isWinner = thirdWinner === teamId;
+    return `
+      <div class="pick-display" style="${isWinner ? 'border-color:var(--accent-green);background:rgba(46,125,50,0.08)' : ''};cursor:pointer"
+           onclick="pickThirdPlaceWinner('${teamId}')">
+        <span class="pick-flag">${team.flag}</span>
+        <div class="pick-info">
+          <h3>${escHtml(team.name)}</h3>
+          <div class="conf">${team.confederation}</div>
+          ${isWinner ? `<div class="prob-pill" style="background:rgba(46,125,50,0.15);color:var(--accent-green);border-color:rgba(46,125,50,0.3)">🥉 Your 3rd Place pick!</div>` : `<div style="font-size:0.8rem;color:var(--text-muted);margin-top:0.4rem">Click to pick as 3rd place</div>`}
+        </div>
+        ${isWinner ? `<span style="font-size:2rem">🥉</span>` : ''}
+      </div>
+    `;
+  };
+
+  return `
+    <div class="bracket-hero">
+      <div>
+        <h2 class="bracket-title">3rd Place Match</h2>
+        <p class="bracket-desc">The two losing semi-finalists compete for bronze. Pick which team finishes third.</p>
+      </div>
+    </div>
+    ${thirdWinner ? `<div class="alert alert-success"><span class="alert-icon">🥉</span>You picked <strong>${TEAMS[thirdWinner].flag} ${TEAMS[thirdWinner].name}</strong> to finish 3rd!</div>` : ''}
+    <div style="display:flex;gap:0.75rem;margin-bottom:1.5rem">
+      <button class="btn btn-ghost btn-sm" onclick="showStage('sf')">← Back to Semi-Finals</button>
+      <button class="btn btn-secondary btn-sm" onclick="showStage('final')">Continue to Final →</button>
+    </div>
+    <div style="text-align:center;font-size:0.875rem;color:var(--text-muted);margin-bottom:1rem">Click a team to pick them as 3rd place</div>
+    <div class="grid-2" style="max-width:700px;margin:0 auto">
+      ${renderContestant(loser1, 'SF1 loser')}
+      ${renderContestant(loser2, 'SF2 loser')}
+    </div>
+  `;
+}
+
 function pickFinalWinner(teamId) {
   if (!currentUser.predictions.sf['SF_1'] || !currentUser.predictions.sf['SF_2']) {
     showToast('Please pick your semi-final winners first!', 'warning');
@@ -788,6 +853,13 @@ function pickFinalWinner(teamId) {
   if (teamId && currentUser.predictions.final === teamId) {
     showToast(`${TEAMS[teamId].flag} ${TEAMS[teamId].name} is your World Cup Champion!`);
   }
+}
+
+function pickThirdPlaceWinner(teamId) {
+  currentUser.predictions.thirdplace = teamId;
+  saveStorage();
+  showStage('thirdplace');
+  showToast(`🥉 ${TEAMS[teamId].name} picked for 3rd place!`, 'success');
 }
 
 // ---- RESOLVE SLOT ----

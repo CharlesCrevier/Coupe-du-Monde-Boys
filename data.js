@@ -17,53 +17,64 @@ const GROUPS = {
   L: ['ENG', 'CRO', 'PAN', 'GHA'],
 };
 
-// R32 bracket: 16 matches
-// Left half (groups A-H + 3rd-place teams)
-// Right half (groups I-L + 3rd-place teams)
+// ============================================================
+// KNOCKOUT BRACKET — official 2026 FIFA World Cup draw
+// 32 teams advance: top 2 from each of 12 groups (24) + best 8 third-placed teams (8)
+// 32 knockout matches: R32(16) + R16(8) + QF(4) + SF(2) + 3rd place(1) + Final(1)
+// ============================================================
+
+// R32: 16 matches — matches 73-88 per official draw (December 5, 2025)
+// slot1/slot2: '1X' = group X winner, '2X' = group X runner-up, '3rd-N' = Nth best 3rd-placed team
+// thirdLabel shows which groups' 3rd-placed teams are eligible for that slot
 const R32_BRACKET = [
-  { id: 'R32_1',  slot1: '1A', slot2: '2B' },
-  { id: 'R32_2',  slot1: '1B', slot2: '2A' },
-  { id: 'R32_3',  slot1: '1C', slot2: '2D' },
-  { id: 'R32_4',  slot1: '1D', slot2: '2C' },
-  { id: 'R32_5',  slot1: '1E', slot2: '2F' },
-  { id: 'R32_6',  slot1: '1F', slot2: '2E' },
-  { id: 'R32_7',  slot1: '1G', slot2: '2H' },
-  { id: 'R32_8',  slot1: '1H', slot2: '2G' },
-  { id: 'R32_9',  slot1: '1I', slot2: '2J' },
-  { id: 'R32_10', slot1: '1J', slot2: '2I' },
-  { id: 'R32_11', slot1: '1K', slot2: '2L' },
-  { id: 'R32_12', slot1: '1L', slot2: '2K' },
-  // 3rd-place qualifiers (best 8 of 12 groups' 3rd-place teams play each other)
-  { id: 'R32_13', slot1: '3rd-1', slot2: '3rd-2' },
-  { id: 'R32_14', slot1: '3rd-3', slot2: '3rd-4' },
-  { id: 'R32_15', slot1: '3rd-5', slot2: '3rd-6' },
-  { id: 'R32_16', slot1: '3rd-7', slot2: '3rd-8' },
+  { id: 'R32_1',  slot1: '2A', slot2: '2B' },                                          // M73
+  { id: 'R32_2',  slot1: '1E', slot2: '3rd-1', thirdLabel: 'Best 3rd (A/B/C/D/F)' },  // M74
+  { id: 'R32_3',  slot1: '1F', slot2: '2C' },                                          // M75
+  { id: 'R32_4',  slot1: '1C', slot2: '2F' },                                          // M76
+  { id: 'R32_5',  slot1: '1I', slot2: '3rd-2', thirdLabel: 'Best 3rd (C/D/F/G/H)' },  // M77
+  { id: 'R32_6',  slot1: '2E', slot2: '2I' },                                          // M78
+  { id: 'R32_7',  slot1: '1A', slot2: '3rd-3', thirdLabel: 'Best 3rd (C/E/F/H/I)' },  // M79
+  { id: 'R32_8',  slot1: '1L', slot2: '3rd-4', thirdLabel: 'Best 3rd (E/H/I/J/K)' },  // M80
+  { id: 'R32_9',  slot1: '1D', slot2: '3rd-5', thirdLabel: 'Best 3rd (B/E/F/I/J)' },  // M81
+  { id: 'R32_10', slot1: '1G', slot2: '3rd-6', thirdLabel: 'Best 3rd (A/E/H/I/J)' },  // M82
+  { id: 'R32_11', slot1: '2K', slot2: '2L' },                                          // M83
+  { id: 'R32_12', slot1: '1H', slot2: '2J' },                                          // M84
+  { id: 'R32_13', slot1: '1B', slot2: '3rd-7', thirdLabel: 'Best 3rd (E/F/G/I/J)' },  // M85
+  { id: 'R32_14', slot1: '1J', slot2: '2H' },                                          // M86
+  { id: 'R32_15', slot1: '1K', slot2: '3rd-8', thirdLabel: 'Best 3rd (D/E/I/J/L)' },  // M87
+  { id: 'R32_16', slot1: '2D', slot2: '2G' },                                          // M88
 ];
 
-// R16 bracket: winner of R32_X vs winner of R32_Y
+// R16: 8 matches — matches 89-96
 const R16_BRACKET = [
-  { id: 'R16_1', from: ['R32_1', 'R32_2'] },
-  { id: 'R16_2', from: ['R32_3', 'R32_4'] },
-  { id: 'R16_3', from: ['R32_5', 'R32_6'] },
-  { id: 'R16_4', from: ['R32_7', 'R32_8'] },
-  { id: 'R16_5', from: ['R32_9', 'R32_10'] },
-  { id: 'R16_6', from: ['R32_11', 'R32_12'] },
-  { id: 'R16_7', from: ['R32_13', 'R32_14'] },
-  { id: 'R16_8', from: ['R32_15', 'R32_16'] },
+  { id: 'R16_1', from: ['R32_1',  'R32_3']  },  // M89: W73 vs W75
+  { id: 'R16_2', from: ['R32_2',  'R32_5']  },  // M90: W74 vs W77
+  { id: 'R16_3', from: ['R32_4',  'R32_6']  },  // M91: W76 vs W78
+  { id: 'R16_4', from: ['R32_7',  'R32_8']  },  // M92: W79 vs W80
+  { id: 'R16_5', from: ['R32_11', 'R32_12'] },  // M93: W83 vs W84
+  { id: 'R16_6', from: ['R32_9',  'R32_10'] },  // M94: W81 vs W82
+  { id: 'R16_7', from: ['R32_14', 'R32_16'] },  // M95: W86 vs W88
+  { id: 'R16_8', from: ['R32_13', 'R32_15'] },  // M96: W85 vs W87
 ];
 
+// QF: 4 matches — matches 97-100
 const QF_BRACKET = [
-  { id: 'QF_1', from: ['R16_1', 'R16_2'] },
-  { id: 'QF_2', from: ['R16_3', 'R16_4'] },
-  { id: 'QF_3', from: ['R16_5', 'R16_6'] },
-  { id: 'QF_4', from: ['R16_7', 'R16_8'] },
+  { id: 'QF_1', from: ['R16_1', 'R16_2'] },  // M97: W89 vs W90
+  { id: 'QF_2', from: ['R16_5', 'R16_6'] },  // M98: W93 vs W94
+  { id: 'QF_3', from: ['R16_3', 'R16_4'] },  // M99: W91 vs W92
+  { id: 'QF_4', from: ['R16_7', 'R16_8'] },  // M100: W95 vs W96
 ];
 
+// SF: 2 matches — matches 101-102
 const SF_BRACKET = [
-  { id: 'SF_1', from: ['QF_1', 'QF_2'] },
-  { id: 'SF_2', from: ['QF_3', 'QF_4'] },
+  { id: 'SF_1', from: ['QF_1', 'QF_2'] },  // M101: W97 vs W98
+  { id: 'SF_2', from: ['QF_3', 'QF_4'] },  // M102: W99 vs W100
 ];
 
+// 3rd place: 1 match — match 103 (losers of both semi-finals)
+const THIRD_PLACE_BRACKET = [{ id: 'THIRD', loserFrom: ['SF_1', 'SF_2'] }];
+
+// Final: 1 match — match 104 at MetLife Stadium, July 19
 const FINAL_BRACKET = [{ id: 'FINAL', from: ['SF_1', 'SF_2'] }];
 
 // Win probability in % (top 15 countries have real values; others share remainder)

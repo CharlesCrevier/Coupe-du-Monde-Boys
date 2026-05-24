@@ -42,7 +42,7 @@ let   _syncBusy     = false;
 
 async function _cloudFetch() {
   const r = await fetch(`${CLOUD_BASE}/${CLOUD_BIN_ID}/latest`, {
-    headers: { 'X-Access-Key': CLOUD_API_KEY }
+    headers: { 'X-Master-Key': CLOUD_API_KEY }
   });
   if (!r.ok) throw new Error(`HTTP ${r.status}`);
   return (await r.json()).record?.users ?? [];
@@ -91,7 +91,7 @@ async function cloudPush() {
     }
     const r = await fetch(`${CLOUD_BASE}/${CLOUD_BIN_ID}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json', 'X-Access-Key': CLOUD_API_KEY },
+      headers: { 'Content-Type': 'application/json', 'X-Master-Key': CLOUD_API_KEY },
       body: JSON.stringify({ users: merged })
     });
     if (!r.ok) throw new Error(`HTTP ${r.status}`);

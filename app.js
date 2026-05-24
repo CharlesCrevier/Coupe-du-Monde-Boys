@@ -1276,3 +1276,30 @@ document.addEventListener('DOMContentLoaded', function() {
     setTeamsSort(this.value);
   });
 });
+
+// ============================================================
+// Twemoji — rendu uniforme des drapeaux sur tous les appareils
+// S'applique automatiquement à chaque mise à jour du DOM
+// ============================================================
+(function () {
+  var _twTimer = null;
+
+  function applyTwemoji() {
+    if (typeof twemoji === 'undefined') return;
+    twemoji.parse(document.body, {
+      folder: 'svg',
+      ext: '.svg'
+    });
+  }
+
+  // Ré-applique twemoji 120ms après chaque modification du DOM (debounce)
+  var twObserver = new MutationObserver(function () {
+    clearTimeout(_twTimer);
+    _twTimer = setTimeout(applyTwemoji, 120);
+  });
+
+  document.addEventListener('DOMContentLoaded', function () {
+    twObserver.observe(document.body, { childList: true, subtree: true });
+    applyTwemoji();
+  });
+}());

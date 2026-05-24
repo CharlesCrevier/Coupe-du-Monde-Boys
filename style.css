@@ -1,6 +1,39 @@
 /* ============================================================
-   ITCILO World Cup 2026 - Styles
+   Les Boys - Coupe du Monde 2026 - Styles
    ============================================================ */
+
+/* ---- Twemoji : drapeaux uniformes sur tous les appareils ---- */
+img.emoji {
+  height: 1.25em;
+  width: auto;
+  vertical-align: -0.2em;
+  display: inline-block;
+  border-radius: 2px;
+}
+/* Grands drapeaux dans les cartes équipes et modals */
+.team-flag img.emoji,
+.modal-flag img.emoji,
+.pick-flag img.emoji {
+  height: 2.5rem;
+  width: auto;
+  vertical-align: middle;
+  border-radius: 3px;
+}
+/* Drapeaux dans les rangées de groupe et matchs */
+.group-team-flag img.emoji,
+.match-team-flag img.emoji,
+.tc-flag img.emoji,
+.lb-champion-flag img.emoji {
+  height: 1.5em;
+  width: auto;
+  vertical-align: middle;
+  border-radius: 2px;
+}
+/* Drapeaux dans les toasts et badges */
+.existing-user-pick img.emoji {
+  height: 1em;
+  vertical-align: -0.1em;
+}
 
 :root {
   /* ITCILO + FIFA World Cup 2026 brand */

@@ -1,69 +1,69 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ITCILO ⚽ World Cup 2026 — Friendly Predictions</title>
+  <title>Les Boys ⚽ Coupe du Monde 2026 — Pronostics Amicaux</title>
   <link rel="stylesheet" href="style.css?v=5">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚽</text></svg>">
 </head>
 <body>
 
 <!-- ===================================================
-     LOGIN SCREEN
+     ÉCRAN DE CONNEXION
      =================================================== -->
 <div id="login-screen">
   <div class="login-card">
     <span class="login-trophy">⚽🏆</span>
-    <h1 class="login-title">World Cup 2026</h1>
-    <p class="login-subtitle">Friendly Predictions & Bracket Challenge</p>
-    <p class="login-org">INTERNATIONAL TRAINING CENTRE OF THE ILO</p>
+    <h1 class="login-title">Coupe du Monde 2026</h1>
+    <p class="login-subtitle">Pronostics Amicaux &amp; Défi de Tableau</p>
+    <p class="login-org">LES BOYS</p>
 
     <form id="register-form" class="login-form" onsubmit="handleRegister(event)">
       <div class="form-group">
-        <label class="form-label" for="register-name">Enter your name to join</label>
-        <input class="form-input" type="text" id="register-name" placeholder="Your name…" maxlength="40" autocomplete="off">
+        <label class="form-label" for="register-name">Entre ton nom pour rejoindre</label>
+        <input class="form-input" type="text" id="register-name" placeholder="Ton nom…" maxlength="40" autocomplete="off">
       </div>
       <button class="btn btn-primary" type="submit" onclick="handleRegister(event)">
-        ⚽ &nbsp; Join the Predictions
+        ⚽ &nbsp; Rejoindre les Pronostics
       </button>
     </form>
 
     <div class="login-divider-section">
-      <div class="login-divider">or continue as</div>
+      <div class="login-divider">ou continuer en tant que</div>
       <div class="existing-users" id="existing-users-list"></div>
     </div>
 
     <p style="margin-top:1.5rem;font-size:0.72rem;color:var(--text-dim)">
-      Predictions are stored locally in your browser. No account needed.
+      Les pronostics sont sauvegardés localement dans ton navigateur. Aucun compte nécessaire.
     </p>
   </div>
 </div>
 
 <!-- ===================================================
-     MAIN APP
+     APPLICATION PRINCIPALE
      =================================================== -->
 <div id="main-app" class="hidden">
 
-  <!-- Header -->
+  <!-- En-tête -->
   <header class="header">
     <div class="header-brand">
       <span class="header-trophy">⚽</span>
       <div>
-        <div class="header-title">World Cup 2026</div>
-        <div class="header-org">ITCILO Friendly Predictions</div>
+        <div class="header-title">Coupe du Monde 2026</div>
+        <div class="header-org">Pronostics Amicaux — Les Boys</div>
       </div>
     </div>
 
     <div style="display:flex;align-items:center;gap:0.75rem">
-      <span id="sync-status" class="sync-badge" title="Cloud sync"></span>
-      <button class="btn-icon" onclick="exportData()" title="Export all predictions as JSON">⬇</button>
-      <button class="btn-icon" onclick="importData()" title="Import predictions from JSON">⬆</button>
+      <span id="sync-status" class="sync-badge" title="Synchronisation nuage"></span>
+      <button class="btn-icon" onclick="exportData()" title="Exporter tous les pronostics en JSON">⬇</button>
+      <button class="btn-icon" onclick="importData()" title="Importer des pronostics depuis JSON">⬆</button>
       <div class="header-user" onclick="switchUser()">
         <div class="user-avatar" id="header-avatar"></div>
         <div>
           <div class="user-name" id="header-user-name"></div>
-          <div class="header-user-label">Switch user</div>
+          <div class="header-user-label">Changer d'utilisateur</div>
         </div>
       </div>
     </div>
@@ -72,40 +72,43 @@
   <!-- Navigation -->
   <nav class="nav">
     <button class="nav-btn active" data-tab="home" onclick="showTab('home')">
-      <span class="nav-icon">🏠</span> Home
+      <span class="nav-icon">🏠</span> Accueil
     </button>
     <button class="nav-btn" data-tab="teams" onclick="showTab('teams')">
-      <span class="nav-icon">🌍</span> Teams & Stats
+      <span class="nav-icon">🌍</span> Équipes &amp; Stats
     </button>
     <button class="nav-btn" data-tab="bracket" onclick="showTab('bracket')">
-      <span class="nav-icon">📋</span> My Bracket
+      <span class="nav-icon">📋</span> Mon Tableau
     </button>
     <button class="nav-btn" data-tab="leaderboard" onclick="showTab('leaderboard')">
-      <span class="nav-icon">🏅</span> Leaderboard
+      <span class="nav-icon">🏅</span> Classement
+    </button>
+    <button class="nav-btn" data-tab="coaches" onclick="showTab('coaches')">
+      <span class="nav-icon">🧢</span> Sélectionneurs
     </button>
   </nav>
 
-  <!-- Content -->
+  <!-- Contenu -->
   <div class="content">
 
-    <!-- ====== HOME TAB ====== -->
+    <!-- ====== ONGLET ACCUEIL ====== -->
     <div id="tab-home" class="tab-panel active">
 
       <div class="home-hero">
-        <div class="home-hero-badge">🗓 FIFA World Cup 2026</div>
-        <h1>Who will lift the <span>trophy?</span></h1>
-        <p>Pick your champion, fill in your bracket, and compete with colleagues across ITCILO. The tournament kicks off 11 June 2026 in the USA, Mexico and Canada.</p>
+        <div class="home-hero-badge">🗓 FIFA Coupe du Monde 2026</div>
+        <h1>Qui soulèvera le <span>trophée ?</span></h1>
+        <p>Choisis ton champion, remplis ton tableau et affronte les boys. Le tournoi débute le 11 juin 2026 aux États-Unis, au Mexique et au Canada.</p>
         <div class="hero-actions">
           <button class="btn btn-primary" onclick="showTab('teams')" style="width:auto">
-            🏆 Pick My Champion
+            🏆 Choisir Mon Champion
           </button>
           <button class="btn btn-secondary" onclick="showTab('bracket')" style="width:auto">
-            📋 Fill My Bracket
+            📋 Remplir Mon Tableau
           </button>
         </div>
       </div>
 
-      <!-- Stats row -->
+      <!-- Rangée de statistiques -->
       <div class="home-stats">
         <div class="stat-card">
           <div class="stat-icon">👥</div>
@@ -115,73 +118,73 @@
         <div class="stat-card">
           <div class="stat-icon">🌍</div>
           <div class="stat-value" id="stat-teams">48</div>
-          <div class="stat-label">Teams</div>
+          <div class="stat-label">Équipes</div>
         </div>
         <div class="stat-card">
           <div class="stat-icon">📅</div>
           <div class="stat-value" id="stat-days">—</div>
-          <div class="stat-label">Days to kickoff</div>
+          <div class="stat-label">Jours avant le coup d'envoi</div>
         </div>
         <div class="stat-card">
           <div class="stat-icon">✅</div>
           <div class="stat-value" id="stat-my-picks">0</div>
-          <div class="stat-label">My picks made</div>
+          <div class="stat-label">Mes pronostics faits</div>
         </div>
       </div>
 
-      <!-- Champion pick -->
+      <!-- Choix du champion -->
       <div class="my-pick-section">
         <div class="section-header">
-          <div class="section-title"><span class="section-icon">🏆</span> My Champion Pick</div>
-          <button class="btn btn-ghost btn-sm" onclick="showTab('teams')">Browse Teams</button>
+          <div class="section-title"><span class="section-icon">🏆</span> Mon Choix de Champion</div>
+          <button class="btn btn-ghost btn-sm" onclick="showTab('teams')">Parcourir les équipes</button>
         </div>
         <div id="my-champion-pick"></div>
       </div>
 
-      <!-- Bracket progress -->
+      <!-- Progression du tableau -->
       <div class="my-pick-section">
         <div class="section-header">
-          <div class="section-title"><span class="section-icon">📋</span> My Bracket Progress</div>
-          <button class="btn btn-ghost btn-sm" onclick="showTab('bracket')">Open Bracket</button>
+          <div class="section-title"><span class="section-icon">📋</span> Progression de Mon Tableau</div>
+          <button class="btn btn-ghost btn-sm" onclick="showTab('bracket')">Ouvrir le Tableau</button>
         </div>
         <div id="my-bracket-summary"></div>
       </div>
 
-      <!-- Top picks preview -->
+      <!-- Aperçu des choix populaires -->
       <div class="card">
         <div class="section-header">
-          <div class="section-title"><span class="section-icon">📊</span> Most Popular Champion Picks</div>
+          <div class="section-title"><span class="section-icon">📊</span> Choix de Champions les Plus Populaires</div>
         </div>
         <div id="top-picks-container"></div>
       </div>
 
     </div>
 
-    <!-- ====== TEAMS TAB ====== -->
+    <!-- ====== ONGLET ÉQUIPES ====== -->
     <div id="tab-teams" class="tab-panel">
 
       <div class="section-header" style="margin-bottom:1.5rem">
         <div>
-          <h2 style="font-size:1.5rem;font-weight:800;margin-bottom:0.25rem">All 48 Teams</h2>
-          <p class="text-muted text-sm">Click any team for full profile, top 3 players, and win probability. Pick your champion from the team page.</p>
+          <h2 style="font-size:1.5rem;font-weight:800;margin-bottom:0.25rem">Les 48 Équipes</h2>
+          <p class="text-muted text-sm">Clique sur une équipe pour son profil complet, ses 3 meilleurs joueurs et sa probabilité de victoire. Choisis ton champion depuis la page de l'équipe.</p>
         </div>
-        <span class="badge badge-gold" id="teams-count">48</span> teams
+        <span class="badge badge-gold" id="teams-count">48</span> équipes
       </div>
 
       <div class="teams-toolbar">
         <div class="search-box">
           <span class="search-box-icon">🔍</span>
-          <input type="text" id="teams-search-input" placeholder="Search teams…">
+          <input type="text" id="teams-search-input" placeholder="Rechercher une équipe…">
         </div>
         <select class="sort-select" id="teams-sort">
-          <option value="prob">Sort by: Win probability</option>
-          <option value="rank">Sort by: FIFA rank</option>
-          <option value="name">Sort by: Name A-Z</option>
+          <option value="prob">Trier par : Probabilité de victoire</option>
+          <option value="rank">Trier par : Classement FIFA</option>
+          <option value="name">Trier par : Nom A-Z</option>
         </select>
       </div>
 
       <div class="filter-pills" style="margin-bottom:1.5rem">
-        <button class="filter-pill active" data-filter="ALL" onclick="setTeamsFilter('ALL')">All confederations</button>
+        <button class="filter-pill active" data-filter="ALL" onclick="setTeamsFilter('ALL')">Toutes les confédérations</button>
         <button class="filter-pill" data-filter="UEFA" onclick="setTeamsFilter('UEFA')">🇪🇺 UEFA</button>
         <button class="filter-pill" data-filter="CONMEBOL" onclick="setTeamsFilter('CONMEBOL')">🌎 CONMEBOL</button>
         <button class="filter-pill" data-filter="CONCACAF" onclick="setTeamsFilter('CONCACAF')">🌎 CONCACAF</button>
@@ -194,51 +197,51 @@
 
     </div>
 
-    <!-- ====== BRACKET TAB ====== -->
+    <!-- ====== ONGLET TABLEAU ====== -->
     <div id="tab-bracket" class="tab-panel">
 
       <div style="margin-bottom:1.5rem">
-        <h2 style="font-size:1.5rem;font-weight:800;margin-bottom:0.25rem">My Bracket</h2>
-        <p class="text-muted text-sm">Fill in your predictions for every stage — from the group stage all the way to the World Cup Final.</p>
+        <h2 style="font-size:1.5rem;font-weight:800;margin-bottom:0.25rem">Mon Tableau</h2>
+        <p class="text-muted text-sm">Remplis tes pronostics pour chaque phase — de la phase de groupes jusqu'à la Finale de la Coupe du Monde.</p>
       </div>
 
       <div class="alert alert-info">
         <span class="alert-icon">ℹ️</span>
         <div>
-          <strong>How it works:</strong> Start with Group Stage — pick who finishes 1st and 2nd in each group. Then fill the knockout rounds in order. Your predictions are saved automatically.
+          <strong>Comment ça marche :</strong> Commence par la Phase de Groupes — choisis qui finit 1er et 2e dans chaque groupe. Remplis ensuite les tours à élimination directe dans l'ordre. Tes pronostics sont sauvegardés automatiquement.
         </div>
       </div>
 
-      <!-- Stage tabs -->
+      <!-- Onglets de phase -->
       <div class="stage-tabs" id="stage-tabs" style="margin-bottom:1.5rem"></div>
 
-      <!-- Stage content -->
+      <!-- Contenu de la phase -->
       <div id="bracket-stage-content"></div>
 
     </div>
 
-    <!-- ====== LEADERBOARD TAB ====== -->
+    <!-- ====== ONGLET CLASSEMENT ====== -->
     <div id="tab-leaderboard" class="tab-panel">
 
       <div class="section-header" style="margin-bottom:1.5rem">
         <div>
           <h2 style="font-size:1.5rem;font-weight:800;margin-bottom:0.25rem">
-            Leaderboard
+            Classement
           </h2>
-          <p class="text-muted text-sm">All colleagues' champion picks — scores will update once the tournament begins.</p>
+          <p class="text-muted text-sm">Les choix de champions de tous les boys — les scores se mettront à jour dès le début du tournoi.</p>
         </div>
         <div style="display:flex;gap:0.5rem;align-items:center">
-          <span class="badge badge-blue"><span id="lb-count">0</span> players</span>
-          <button class="btn btn-secondary btn-sm" onclick="exportData()">⬇ Export</button>
-          <button class="btn btn-secondary btn-sm" onclick="importData()">⬆ Import</button>
+          <span class="badge badge-blue"><span id="lb-count">0</span> joueurs</span>
+          <button class="btn btn-secondary btn-sm" onclick="exportData()">⬇ Exporter</button>
+          <button class="btn btn-secondary btn-sm" onclick="importData()">⬆ Importer</button>
         </div>
       </div>
 
       <div class="alert alert-warning">
         <span class="alert-icon">🏆</span>
         <div>
-          <strong>Scoring (live after tournament starts):</strong>
-          Champion correct = 20pts · Finalist = 10pts · Semi-finalist = 5pts · QF = 3pts · R16 = 2pts · R32 = 1pt · Group winner = 2pts · Group 2nd = 1pt
+          <strong>Système de points (en direct après le début du tournoi) :</strong>
+          Champion correct = 20pts · Finaliste = 10pts · Demi-finaliste = 5pts · Quart = 3pts · Huitième = 2pts · 1/32 = 1pt · 1er groupe = 2pts · 2e groupe = 1pt
         </div>
       </div>
 
@@ -246,31 +249,227 @@
         <div class="lb-row lb-header">
           <div>#</div>
           <div>Participant</div>
-          <div>Champion Pick</div>
+          <div>Choix de Champion</div>
           <div class="lb-score-col">Score</div>
-          <div>Bracket</div>
+          <div>Tableau</div>
         </div>
         <div id="leaderboard-container"></div>
       </div>
 
       <div style="margin-top:2rem;padding:1.5rem;background:var(--surface);border:1px solid var(--border);border-radius:14px">
-        <h3 style="font-size:1rem;font-weight:700;margin-bottom:0.75rem">Share predictions with colleagues</h3>
+        <h3 style="font-size:1rem;font-weight:700;margin-bottom:0.75rem">Partager ses pronostics avec les boys</h3>
         <p class="text-muted text-sm" style="margin-bottom:1rem">
-          Export your predictions as a JSON file, then share with a colleague who can import it to see your picks on their leaderboard. Or share this entire app folder via a shared drive.
+          Exporte tes pronostics en fichier JSON, puis partage-les avec un ami qui pourra les importer pour voir tes choix sur son classement. Ou partage tout le dossier de l'appli via un drive partagé.
         </p>
         <div style="display:flex;gap:0.75rem;flex-wrap:wrap">
-          <button class="btn btn-secondary" onclick="exportData()">⬇ Export my predictions</button>
-          <button class="btn btn-secondary" onclick="importData()">⬆ Import colleague's predictions</button>
+          <button class="btn btn-secondary" onclick="exportData()">⬇ Exporter mes pronostics</button>
+          <button class="btn btn-secondary" onclick="importData()">⬆ Importer les pronostics d'un ami</button>
         </div>
       </div>
 
+    </div>
+
+    <!-- ====== ONGLET SÉLECTIONNEURS ====== -->
+    <div id="tab-coaches" class="tab-panel">
+
+      <div style="margin-bottom:1.5rem">
+        <h2 style="font-size:1.5rem;font-weight:800;margin-bottom:0.25rem">🧢 Les Sélectionneurs</h2>
+        <p class="text-muted text-sm">Les meilleurs entraîneurs du monde… enfin, les boys. Voici les 8 sélectionneurs officiels des 8 équipes favorites pour la Coupe du Monde 2026.</p>
+      </div>
+
+      <div class="alert alert-info">
+        <span class="alert-icon">📋</span>
+        <div>
+          <strong>Comment ça marche :</strong> Chaque sélectionneur a été choisi selon ses qualités (ou défauts) personnels. La ressemblance avec les vraies équipes nationales est… approximative. La ressemblance avec les boys est, elle, parfaite.
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:1.5rem;margin-top:1.5rem">
+
+        <!-- FOUG — Argentine -->
+        <div class="card" style="border-left:4px solid #74acdf">
+          <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1rem;flex-wrap:wrap">
+            <span style="font-size:3rem">🇦🇷</span>
+            <div>
+              <div style="font-size:1.25rem;font-weight:800">Foug</div>
+              <div style="font-size:0.85rem;color:var(--text-dim)">Sélectionneur de l'<strong>Argentine</strong> · Probabilité de victoire : 17%</div>
+              <div style="margin-top:0.3rem">
+                <span class="badge badge-gold" style="font-size:0.7rem">⚖️ Avocat du peuple</span>
+                <span class="badge badge-blue" style="font-size:0.7rem;margin-left:0.3rem">🌹 De gauche</span>
+                <span class="badge" style="font-size:0.7rem;margin-left:0.3rem;background:rgba(0,133,66,0.15);color:#008542;border:1px solid rgba(0,133,66,0.3)">🍁 Indépendiste</span>
+              </div>
+            </div>
+          </div>
+          <p style="font-size:0.9rem;line-height:1.7;color:var(--text)">
+            Foug dirige l'Argentine comme il plaide une cause : avec une conviction totale, quelques arguments de trop, et la certitude absolue d'avoir raison. Son style de jeu ? <em>Le pressing gauche</em> — l'équipe attaque sur tous les fronts simultanément en réclamant l'indépendance tactique de chaque joueur. Il arrive à chaque match avec un discours préparé de 45 minutes sur pourquoi les arbitres sont des suppôts du régime fédéraliste FIFA.
+          </p>
+          <p style="font-size:0.9rem;line-height:1.7;color:var(--text);margin-top:0.5rem">
+            Survivant du cancer et donc convaincu que son équipe est littéralement invincible (<em>« J'ai battu pire que ça »</em>), il compense son indignation politique par une gestion impeccable du vestiaire — surtout quand il y a un buffet après le match. Formation préférée : le 4-2-3-1 <em>souverainiste</em>, avec Messi en tête de liste électorale. 🥐
+          </p>
+        </div>
+
+        <!-- KILLER — France -->
+        <div class="card" style="border-left:4px solid #002395">
+          <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1rem;flex-wrap:wrap">
+            <span style="font-size:3rem">🇫🇷</span>
+            <div>
+              <div style="font-size:1.25rem;font-weight:800">Killer</div>
+              <div style="font-size:0.85rem;color:var(--text-dim)">Sélectionneur de la <strong>France</strong> · Probabilité de victoire : 14%</div>
+              <div style="margin-top:0.3rem">
+                <span class="badge badge-gold" style="font-size:0.7rem">🦌 Chasseur-pêcheur</span>
+                <span class="badge badge-blue" style="font-size:0.7rem;margin-left:0.3rem">🏡 Fidèle à SJC</span>
+                <span class="badge" style="font-size:0.7rem;margin-left:0.3rem;background:rgba(16,185,129,0.15);color:#059669;border:1px solid rgba(16,185,129,0.3)">💛 Super ami</span>
+              </div>
+            </div>
+          </div>
+          <p style="font-size:0.9rem;line-height:1.7;color:var(--text)">
+            Killer dirige la France comme il chasse : <em>patiemment à l'affût, immobile pendant 80 minutes, puis un seul tir précis qui règle tout</em>. Son secret tactique ? L'attente. L'équipe recule, recule, recule… puis Mbappé part en sprint comme un orignal qui a vu une lichette de sel.
+          </p>
+          <p style="font-size:0.9rem;line-height:1.7;color:var(--text);margin-top:0.5rem">
+            Il commence chaque causerie d'avant-match par une histoire du temps où il avait 11 ans et avait prédit que la France gagnerait le Mondial (et il avait raison — il l'a dit à tout le monde à St-Jean-Chrysostome). Fidèle comme pas un : jamais changé son 4-4-2 depuis 1998. Les joueurs adorent ça, même quand ils comprennent pas pourquoi. 🎣
+          </p>
+        </div>
+
+        <!-- STICH — Angleterre -->
+        <div class="card" style="border-left:4px solid #cf081f">
+          <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1rem;flex-wrap:wrap">
+            <span style="font-size:3rem">🏴󠁧󠁢󠁥󠁮󠁧󠁿</span>
+            <div>
+              <div style="font-size:1.25rem;font-weight:800">Stich</div>
+              <div style="font-size:0.85rem;color:var(--text-dim)">Sélectionneur de l'<strong>Angleterre</strong> · Probabilité de victoire : 12%</div>
+              <div style="margin-top:0.3rem">
+                <span class="badge badge-gold" style="font-size:0.7rem">🏗️ Chef de l'inspection</span>
+                <span class="badge badge-blue" style="font-size:0.7rem;margin-left:0.3rem">💃 Épaules en feu</span>
+                <span class="badge" style="font-size:0.7rem;margin-left:0.3rem;background:rgba(139,92,246,0.15);color:#7c3aed;border:1px solid rgba(139,92,246,0.3)">🗺️ Géographe</span>
+              </div>
+            </div>
+          </div>
+          <p style="font-size:0.9rem;line-height:1.7;color:var(--text)">
+            En tant que chef de l'inspection de Lévis, Stich arrive à chaque match avec un rapport de 47 pages sur les non-conformités de l'adversaire. <em>« Le pressing de l'Espagne ne respecte pas le code du bâtiment. Je leur envoie un avis d'infraction. »</em> Son équipe joue avec une précision chirurgicale — chaque passe est codifiée, chaque déplacement est conforme aux normes.
+          </p>
+          <p style="font-size:0.9rem;line-height:1.7;color:var(--text);margin-top:0.5rem">
+            Quand l'Angleterre marque un but, Stich célèbre avec ses célèbres <em>mouvements d'épaules de discothèque</em> — un spectacle que même Bellingham admire. Ses deux filles l'ont convaincu d'intégrer un peu plus de créativité dans le jeu, mais il reste convaincu que la géographie du terrain est un avantage tactique sous-estimé. 🏋️
+          </p>
+        </div>
+
+        <!-- ROD — Brésil -->
+        <div class="card" style="border-left:4px solid #009c3b">
+          <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1rem;flex-wrap:wrap">
+            <span style="font-size:3rem">🇧🇷</span>
+            <div>
+              <div style="font-size:1.25rem;font-weight:800">Rod</div>
+              <div style="font-size:0.85rem;color:var(--text-dim)">Sélectionneur du <strong>Brésil</strong> · Probabilité de victoire : 11%</div>
+              <div style="margin-top:0.3rem">
+                <span class="badge badge-gold" style="font-size:0.7rem">🎸 Musicien</span>
+                <span class="badge badge-blue" style="font-size:0.7rem;margin-left:0.3rem">✈️ Grand voyageur</span>
+                <span class="badge" style="font-size:0.7rem;margin-left:0.3rem;background:rgba(245,158,11,0.15);color:#d97706;border:1px solid rgba(245,158,11,0.3)">🎲 Stratège opportuniste</span>
+              </div>
+            </div>
+          </div>
+          <p style="font-size:0.9rem;line-height:1.7;color:var(--text)">
+            Rod dirige le Brésil avec la même énergie qu'il met dans ses projets musicaux : beaucoup de flair, peu d'entraînements, et une théorie élaborée sur pourquoi le talent naturel suffit. Les séances d'entraînement ? <em>Optionnelles. Le talent, lui, est obligatoire.</em> Vinicius Jr. peut bien improviser — Rod aussi, depuis toujours.
+          </p>
+          <p style="font-size:0.9rem;line-height:1.7;color:var(--text);margin-top:0.5rem">
+            Sa stratégie de jeu change selon le pays où il se trouve quand il regarde le match. À Barcelone, c'est du tiki-taka. À Rio, c'est du samba football. À Montréal (dans son salon), c'est <em>« stressez-vous pas les gars, on a Vini »</em>. Son meilleur atout : n'être jamais là quand ça va mal, et toujours là pour prendre le crédit quand ça va bien. 🎵
+          </p>
+        </div>
+
+        <!-- LOWIS — Espagne -->
+        <div class="card" style="border-left:4px solid #c60b1e">
+          <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1rem;flex-wrap:wrap">
+            <span style="font-size:3rem">🇪🇸</span>
+            <div>
+              <div style="font-size:1.25rem;font-weight:800">Lowis</div>
+              <div style="font-size:0.85rem;color:var(--text-dim)">Sélectionneur de l'<strong>Espagne</strong> · Probabilité de victoire : 10%</div>
+              <div style="margin-top:0.3rem">
+                <span class="badge badge-gold" style="font-size:0.7rem">💻 Informaticien</span>
+                <span class="badge badge-blue" style="font-size:0.7rem;margin-left:0.3rem">🛋️ Sportif de salon</span>
+                <span class="badge" style="font-size:0.7rem;margin-left:0.3rem;background:rgba(239,68,68,0.15);color:#dc2626;border:1px solid rgba(239,68,68,0.3)">😤 Grognon efficace</span>
+              </div>
+            </div>
+          </div>
+          <p style="font-size:0.9rem;line-height:1.7;color:var(--text)">
+            Lowis a développé un système de possession basé sur la même logique qu'un bon algorithme : <em>si on garde le ballon assez longtemps, l'adversaire finit par crasher</em>. Il a codé lui-même une app pour analyser les passes de l'Espagne, et il peut te dire exactement pourquoi le build-up de Pedri est sous-optimal — depuis son divan, en boxers, avec un chip bag.
+          </p>
+          <p style="font-size:0.9rem;line-height:1.7;color:var(--text);margin-top:0.5rem">
+            Grognon en conférence de presse, mais son équipe performe. <em>« C'est pas compliqué »</em>, dit-il à chaque fois que c'est justement très compliqué. Bon gars au fond. Il serait probablement le meilleur sélectionneur du monde s'il daignait se lever du sofa pour aller aux matchs. Lamine Yamal le fascine et l'irrite en même temps — <em>« comment un kid de 17 ans peut pas faire d'erreurs ? »</em> 🖥️
+          </p>
+        </div>
+
+        <!-- JO — Allemagne -->
+        <div class="card" style="border-left:4px solid #000000">
+          <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1rem;flex-wrap:wrap">
+            <span style="font-size:3rem">🇩🇪</span>
+            <div>
+              <div style="font-size:1.25rem;font-weight:800">Jo</div>
+              <div style="font-size:0.85rem;color:var(--text-dim)">Sélectionneur de l'<strong>Allemagne</strong> · Probabilité de victoire : 8%</div>
+              <div style="margin-top:0.3rem">
+                <span class="badge badge-gold" style="font-size:0.7rem">🏒 Hockey dad</span>
+                <span class="badge badge-blue" style="font-size:0.7rem;margin-left:0.3rem">💼 Homme d'affaires</span>
+                <span class="badge" style="font-size:0.7rem;margin-left:0.3rem;background:rgba(16,185,129,0.15);color:#059669;border:1px solid rgba(16,185,129,0.3)">⛳ Golfeur</span>
+              </div>
+            </div>
+          </div>
+          <p style="font-size:0.9rem;line-height:1.7;color:var(--text)">
+            Jo gère l'Allemagne comme il gère ses affaires : avec efficacité, structure, et sans faire de longues heures inutilement. La réunion d'avant-match dure exactement 20 minutes. Le système de jeu est rodé depuis novembre. Les joueurs savent quoi faire — il leur fait confiance. Puis il part jouer au golf.
+          </p>
+          <p style="font-size:0.9rem;line-height:1.7;color:var(--text);margin-top:0.5rem">
+            Il suit ses gars au hockey le week-end, mais là c'est LA Coupe du Monde — faut pas exagérer non plus, y'a des priorités. Formation favorite : le 4-3-3 <em>rentable</em>, où chaque joueur a un rôle clair et un objectif mesurable. Wirtz et Musiala sont ses deux centres qui scorent — comme ses fils, il est fier d'eux mais les laisse s'exprimer. <em>« Bon, Allemagne va gagner, c'est logique. Qui veut un café ? »</em> ⛳
+          </p>
+        </div>
+
+        <!-- BLOKE — Portugal -->
+        <div class="card" style="border-left:4px solid #006600">
+          <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1rem;flex-wrap:wrap">
+            <span style="font-size:3rem">🇵🇹</span>
+            <div>
+              <div style="font-size:1.25rem;font-weight:800">Bloke</div>
+              <div style="font-size:0.85rem;color:var(--text-dim)">Sélectionneur du <strong>Portugal</strong> · Probabilité de victoire : 6%</div>
+              <div style="margin-top:0.3rem">
+                <span class="badge badge-gold" style="font-size:0.7rem">🏦 Banquier</span>
+                <span class="badge badge-blue" style="font-size:0.7rem;margin-left:0.3rem">🏠 Grosse maison</span>
+                <span class="badge" style="font-size:0.7rem;margin-left:0.3rem;background:rgba(59,130,246,0.15);color:#2563eb;border:1px solid rgba(59,130,246,0.3)">🇿🇦 Connexion sud-af'</span>
+              </div>
+            </div>
+          </div>
+          <p style="font-size:0.9rem;line-height:1.7;color:var(--text)">
+            Bloke dirige le Portugal avec la même rigueur qu'il applique à ses dossiers bancaires : <em>analyse de risque, optimisation du ROI tactique, et zéro tolérance pour les ballons perdus inutilement</em>. Il a un Excel de 12 onglets sur les probabilités de victoire. Sa blonde sud-africaine supporte le Portugal par solidarité conjugale — et parce que les maillots sont beaux.
+          </p>
+          <p style="font-size:0.9rem;line-height:1.7;color:var(--text);margin-top:0.5rem">
+            Conservateur dans ses formations (le 4-3-3 depuis 2006, merci), il ne change pas ce qui marche. Père responsable, il s'assure que chaque joueur rentre à l'heure au village olympique. Bruno Fernandes a le droit de créer, mais dans le cadre des politiques internes approuvées. <em>« In Portugal we trust »</em> — et dans les obligations à taux fixe aussi. 📊
+          </p>
+        </div>
+
+        <!-- BEGOOD — Pays-Bas -->
+        <div class="card" style="border-left:4px solid #ff6600">
+          <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1rem;flex-wrap:wrap">
+            <span style="font-size:3rem">🇳🇱</span>
+            <div>
+              <div style="font-size:1.25rem;font-weight:800">Begood</div>
+              <div style="font-size:0.85rem;color:var(--text-dim)">Sélectionneur des <strong>Pays-Bas</strong> · Probabilité de victoire : 5%</div>
+              <div style="margin-top:0.3rem">
+                <span class="badge badge-gold" style="font-size:0.7rem">🎉 Party boy</span>
+                <span class="badge badge-blue" style="font-size:0.7rem;margin-left:0.3rem">🌏 Aventurier</span>
+                <span class="badge" style="font-size:0.7rem;margin-left:0.3rem;background:rgba(245,158,11,0.15);color:#d97706;border:1px solid rgba(245,158,11,0.3)">⚽ Ex-coach U-12</span>
+              </div>
+            </div>
+          </div>
+          <p style="font-size:0.9rem;line-height:1.7;color:var(--text)">
+            Begood est le seul sélectionneur qui dirige son équipe depuis 9 fuseaux horaires de distance. Il suit les matchs en direct à 3h du matin depuis Bangkok, Dubaï ou n'importe où il a atterri cette semaine. Ses instructions tactiques arrivent par WhatsApp avec parfois un délai de 4 heures et plusieurs autocorrects suspects.
+          </p>
+          <p style="font-size:0.9rem;line-height:1.7;color:var(--text);margin-top:0.5rem">
+            Mais voilà : Begood a coaché des U-12 dans sa jeunesse, et il ne l'a jamais oublié. <em>« Trust me guys, I used to coach this sport. »</em> Son système de jeu s'inspire directement de ce qu'il faisait avec les petits : pressing haut, transitions rapides, et si ça marche pas, on commande des pizzas et on réessaie. Il arrive au watch party avec des shots pour tout le monde. Van Dijk est son capitaine préféré parce qu'il ressemble à quelqu'un à qui on peut faire confiance. 🌴
+          </p>
+        </div>
+
+      </div><!-- /coaches grid -->
     </div>
 
   </div><!-- /content -->
 </div><!-- /main-app -->
 
 <!-- ===================================================
-     TEAM DETAIL MODAL
+     MODAL DÉTAIL ÉQUIPE
      =================================================== -->
 <div class="modal-overlay" id="team-modal-overlay">
   <div class="modal" id="team-modal">
@@ -278,7 +477,7 @@
     <div class="modal-header">
       <span class="modal-flag" id="modal-flag">🏳️</span>
       <div class="modal-title-group">
-        <h2 class="modal-title" id="modal-team-name">Team Name</h2>
+        <h2 class="modal-title" id="modal-team-name">Nom de l'équipe</h2>
         <div class="modal-sub" id="modal-team-sub"></div>
       </div>
       <button class="modal-close" onclick="closeTeamModal()">✕</button>
@@ -288,40 +487,40 @@
 
       <!-- Description -->
       <div class="modal-section">
-        <div class="modal-section-title">Team Overview</div>
+        <div class="modal-section-title">Présentation de l'équipe</div>
         <p class="modal-description" id="modal-description"></p>
       </div>
 
-      <!-- Win probability -->
+      <!-- Probabilité de victoire -->
       <div class="modal-section">
-        <div class="modal-section-title">Win Probability</div>
+        <div class="modal-section-title">Probabilité de victoire</div>
         <div class="prob-display">
-          <span class="prob-label">World Cup win chance</span>
+          <span class="prob-label">Chance de remporter la Coupe du Monde</span>
           <div class="prob-bar"><div class="prob-bar-fill" id="modal-prob-fill" style="width:0%"></div></div>
           <span class="prob-value" id="modal-prob-value">0%</span>
         </div>
         <div class="prob-context" id="modal-prob-context"></div>
       </div>
 
-      <!-- Top 3 Players -->
+      <!-- Top 3 Joueurs -->
       <div class="modal-section">
-        <div class="modal-section-title">Top 3 Players to Watch</div>
+        <div class="modal-section-title">Top 3 Joueurs à Surveiller</div>
         <div class="players-list" id="modal-players"></div>
       </div>
 
-      <!-- Group info -->
+      <!-- Info groupe -->
       <div class="modal-section">
-        <div class="modal-section-title">Group Stage Draw</div>
+        <div class="modal-section-title">Tirage de la Phase de Groupes</div>
         <div id="modal-group"></div>
       </div>
 
       <!-- CTA -->
       <div class="modal-pick-cta">
         <button class="pick-champion-btn" id="modal-pick-btn" onclick="pickChampionFromModal()">
-          🏆 Pick as Champion
+          🏆 Choisir comme Champion
         </button>
         <button class="btn btn-ghost" onclick="closeTeamModal()" style="flex-shrink:0">
-          Close
+          Fermer
         </button>
       </div>
 
@@ -329,13 +528,13 @@
   </div>
 </div>
 
-<!-- Toast container -->
+<!-- Conteneur de notifications -->
 <div id="toast-container" style="position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;display:flex;flex-direction:column;gap:0.5rem;pointer-events:none;align-items:flex-end"></div>
 
 <!-- Scripts -->
 <script src="data.js?v=5"></script>
 <script>
-  // Add team IDs to TEAMS objects for easy reference
+  // Ajoute les IDs d'équipe aux objets TEAMS pour référence facile
   Object.keys(TEAMS).forEach(id => { TEAMS[id].id = id; });
 </script>
 <script src="app.js?v=5"></script>

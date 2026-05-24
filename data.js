@@ -1,5 +1,5 @@
 // ============================================================
-// ITCILO World Cup 2026 - Tournament Data
+// Les Boys - Coupe du Monde 2026 - Données du tournoi
 // ============================================================
 
 // Cloud sync — create a free account at jsonbin.io, make a bin with

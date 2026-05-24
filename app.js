@@ -1,8 +1,8 @@
 /* ============================================================
-   ITCILO World Cup 2026 - Application Logic
+   Les Boys - Coupe du Monde 2026 - Logique de l'application
    ============================================================ */
 
-const STORAGE_KEY = 'itcilo_wc2026_v2';
+const STORAGE_KEY = 'lesboys_cdm2026_v2';
 
 // ============================================================
 // State
@@ -108,9 +108,9 @@ function setSyncBadge(state) {
   if (!el) return;
   if (!CLOUD_ENABLED) return;
   const map = {
-    syncing: ['sync-ing', '⟳', 'Syncing with cloud…'],
-    ok:      ['sync-ok', '✓', 'All predictions synced'],
-    error:   ['sync-err', '!', 'Sync failed — changes saved locally'],
+    syncing: ['sync-ing', '⟳', 'Synchronisation en cours…'],
+    ok:      ['sync-ok', '✓', 'Tous les pronostics synchronisés'],
+    error:   ['sync-err', '!', 'Échec de la synchro — modifications sauvegardées localement'],
   };
   const [cls, icon, tip] = map[state];
   el.className = `sync-badge ${cls}`;
@@ -121,7 +121,7 @@ function setSyncBadge(state) {
       if (el.textContent === '✓') {
         el.className = 'sync-badge sync-idle';
         el.textContent = '☁';
-        el.title = 'Cloud sync active';
+        el.title = 'Synchronisation nuage active';
       }
     }, 2500);
   }
@@ -213,7 +213,7 @@ function renderExistingUsers() {
       </div>
       <div>
         <div class="existing-user-name">${escHtml(u.name)}</div>
-        <div class="existing-user-pick">${u.predictions.champion ? '🏆 ' + TEAMS[u.predictions.champion].flag + ' ' + TEAMS[u.predictions.champion].name : 'No champion picked yet'}</div>
+        <div class="existing-user-pick">${u.predictions.champion ? '🏆 ' + TEAMS[u.predictions.champion].flag + ' ' + TEAMS[u.predictions.champion].name : 'Aucun champion choisi'}</div>
       </div>
     </button>
   `).join('');
@@ -263,6 +263,7 @@ function renderTab(tab) {
     case 'teams': renderTeams(); break;
     case 'bracket': renderBracket(); break;
     case 'leaderboard': renderLeaderboard(); break;
+    case 'coaches': /* contenu statique dans le HTML — rien à rendre */ break;
   }
 }
 
@@ -308,8 +309,8 @@ function renderHome() {
       <div class="no-pick-placeholder" onclick="showTab('teams')">
         <span class="no-pick-icon">🤔</span>
         <div class="no-pick-text">
-          <strong>Who will win the 2026 World Cup?</strong>
-          Click here to browse teams and place your champion bet
+          <strong>Qui va gagner la Coupe du Monde 2026 ?</strong>
+          Clique ici pour parcourir les équipes et placer ton pronostic de champion
         </div>
       </div>
     `;
@@ -319,25 +320,25 @@ function renderHome() {
   const bracketSummary = document.getElementById('my-bracket-summary');
   bracketSummary.innerHTML = `
     <div class="bracket-progress-rings" style="margin-top:0.75rem">
-      ${renderProgressRing('Groups', completedPredictions.groups, 12)}
-      ${renderProgressRing('Round of 32', completedPredictions.r32, 16)}
-      ${renderProgressRing('Round of 16', completedPredictions.r16, 8)}
-      ${renderProgressRing('Quarter-finals', completedPredictions.qf, 4)}
-      ${renderProgressRing('Semi-finals', completedPredictions.sf, 2)}
-      ${renderProgressRing('Final', completedPredictions.final, 1)}
+      ${renderProgressRing('Groupes', completedPredictions.groups, 12)}
+      ${renderProgressRing('1/32 de finale', completedPredictions.r32, 16)}
+      ${renderProgressRing('Huitièmes', completedPredictions.r16, 8)}
+      ${renderProgressRing('Quarts', completedPredictions.qf, 4)}
+      ${renderProgressRing('Demies', completedPredictions.sf, 2)}
+      ${renderProgressRing('Finale', completedPredictions.final, 1)}
     </div>
     ${completedPredictions.total === 0 ? `
       <div style="margin-top:1rem">
-        <button class="btn btn-secondary btn-sm" onclick="showTab('bracket')">Fill in my bracket →</button>
+        <button class="btn btn-secondary btn-sm" onclick="showTab('bracket')">Remplir mon tableau →</button>
       </div>
     ` : completedPredictions.total < 44 ? `
       <div style="margin-top:1rem">
-        <button class="btn btn-secondary btn-sm" onclick="showTab('bracket')">Continue filling bracket →</button>
+        <button class="btn btn-secondary btn-sm" onclick="showTab('bracket')">Continuer à remplir le tableau →</button>
       </div>
     ` : `
       <div class="alert alert-success" style="margin-top:1rem">
         <span class="alert-icon">✅</span>
-        Your bracket is complete! Good luck!
+        Ton tableau est complet ! Bonne chance !
       </div>
     `}
   `;
@@ -366,7 +367,7 @@ function renderTopPicks() {
   });
   const sorted = Object.entries(pickerCounts).sort((a,b) => b[1]-a[1]).slice(0, 6);
   if (!sorted.length) {
-    container.innerHTML = '<p class="text-muted text-sm">No predictions yet. Be the first!</p>';
+    container.innerHTML = '<p class="text-muted text-sm">Aucun pronostic pour l\'instant. Sois le premier !</p>';
     return;
   }
   const max = sorted[0][1];
@@ -383,7 +384,7 @@ function renderTopPicks() {
             <div style="height:100%;width:${(count/max)*100}%;background:linear-gradient(90deg,var(--accent),var(--accent-orange));border-radius:2px"></div>
           </div>
         </div>
-        <span style="font-size:0.8rem;font-weight:700;color:var(--accent)">${count} pick${count>1?'s':''}</span>
+        <span style="font-size:0.8rem;font-weight:700;color:var(--accent)">${count} pronostic${count>1?'s':''}</span>
       </div>
     `;
   }).join('');
@@ -495,7 +496,7 @@ function openTeamDetail(teamId) {
   // Probability context
   const allProbs = Object.values(TEAMS).sort((a,b) => b.probability - a.probability);
   const rank = allProbs.findIndex(t => t.id === teamId) + 1;
-  document.getElementById('modal-prob-context').textContent = `Ranked ${rank}${getOrdSuffix(rank)} favourite out of 48 teams`;
+  document.getElementById('modal-prob-context').textContent = `${rank}e favori sur 48 équipes`;
 
   // Players
   document.getElementById('modal-players').innerHTML = team.players.map((p, i) => `
@@ -532,7 +533,7 @@ function openTeamDetail(teamId) {
 
   // Pick button
   const pickBtn = document.getElementById('modal-pick-btn');
-  pickBtn.textContent = isPick ? '✅ Your Current Champion Pick' : `🏆 Pick ${team.name} as Champion`;
+  pickBtn.textContent = isPick ? '✅ Ton champion actuel' : `🏆 Choisir ${team.name} comme Champion`;
   pickBtn.className = `pick-champion-btn${isPick ? ' already-picked' : ''}`;
 
   document.getElementById('team-modal-overlay').classList.add('open');
@@ -550,7 +551,7 @@ function pickChampionFromModal() {
 
   // Update button
   const pickBtn = document.getElementById('modal-pick-btn');
-  pickBtn.textContent = `✅ Your Current Champion Pick`;
+  pickBtn.textContent = `✅ Ton champion actuel`;
   pickBtn.className = 'pick-champion-btn already-picked';
 
   // Refresh teams if visible
@@ -582,7 +583,7 @@ function renderStageTabsProgress() {
     thirdplace: picks.thirdplace ? 1 : 0,
     final:      picks.final ? 1 : 0,
   };
-  const labels = { groups: 'Groups', thirdslots: 'Best 8 Third', r32: 'Round of 32', r16: 'Round of 16', qf: 'Quarter-Finals', sf: 'Semi-Finals', thirdplace: '3rd Place', final: 'Final' };
+  const labels = { groups: 'Groupes', thirdslots: 'Meilleurs 3es', r32: '1/32 de finale', r16: 'Huitièmes', qf: 'Quarts de finale', sf: 'Demi-finales', thirdplace: '3e Place', final: 'Finale' };
 
   document.getElementById('stage-tabs').innerHTML = stages.map(s => {
     const isComplete = done[s] >= totals[s];
@@ -621,23 +622,23 @@ function renderGroupsStage() {
   return `
     <div class="bracket-hero">
       <div>
-        <h2 class="bracket-title">Group Stage Predictions</h2>
-        <p class="bracket-desc">In each group, click a team once to pick them <strong>1st</strong>, then click another team to pick them <strong>2nd</strong>. Click a picked team again to remove them. The top 2 advance to the Round of 32; the best 8 third-placed teams also qualify.</p>
+        <h2 class="bracket-title">Pronostics de la Phase de Groupes</h2>
+        <p class="bracket-desc">Dans chaque groupe, clique une fois sur une équipe pour la choisir <strong>1re</strong>, puis sur une autre pour la choisir <strong>2e</strong>. Reclique sur une équipe sélectionnée pour l'enlever. Les 2 premières avancent au 1/32 de finale ; les 8 meilleurs 3es se qualifient aussi.</p>
       </div>
       <div class="bracket-progress-rings">
         <div class="progress-ring-item">
           <div class="progress-ring-value">${complete}</div>
           <div class="progress-ring-total">/ 12</div>
-          <div class="progress-ring-label">Groups done</div>
+          <div class="progress-ring-label">Groupes complétés</div>
         </div>
       </div>
     </div>
-    ${complete === 12 ? `<div class="alert alert-success"><span class="alert-icon">✅</span>All group predictions complete! Continue to pick the Best 8 Third-Placed Teams →</div>` : ''}
+    ${complete === 12 ? `<div class="alert alert-success"><span class="alert-icon">✅</span>Tous les pronostics de groupes sont complétés ! Continue pour choisir les 8 meilleurs 3es →</div>` : ''}
     <div class="groups-grid">
       ${Object.keys(GROUPS).map(g => renderGroupCard(g, GROUPS[g], picks[g] || {})).join('')}
     </div>
     <div style="margin-top:1.5rem">
-      <button class="btn btn-secondary" onclick="showStage('thirdslots')">Continue: Pick Best 8 Third-Placed Teams →</button>
+      <button class="btn btn-secondary" onclick="showStage('thirdslots')">Continuer : Choisir les 8 meilleurs 3es →</button>
     </div>
   `;
 }
@@ -648,7 +649,7 @@ function renderGroupCard(groupId, teamIds, groupPicks) {
     <div class="group-card${complete ? ' complete' : ''}" id="group-card-${groupId}">
       <div class="group-card-header">
         <span class="group-name">Group ${groupId}</span>
-        <span class="group-pick-hint">${complete ? '✅ Complete' : groupPicks.first ? 'Now pick 2nd place' : 'Click to pick 1st place'}</span>
+        <span class="group-pick-hint">${complete ? '✅ Complété' : groupPicks.first ? 'Choisis maintenant le 2e' : 'Clique pour choisir le 1er'}</span>
       </div>
       <div class="group-card-body">
         ${teamIds.map(teamId => renderGroupTeamRow(groupId, teamId, groupPicks)).join('')}
@@ -663,13 +664,13 @@ function renderGroupTeamRow(groupId, teamId, groupPicks) {
   let rankBadge = '';
   if (groupPicks.first === teamId) {
     rankClass = 'rank-1';
-    rankBadge = '<span class="group-rank-badge rank-badge-1">1st</span>';
+    rankBadge = '<span class="group-rank-badge rank-badge-1">1er</span>';
   } else if (groupPicks.second === teamId) {
     rankClass = 'rank-2';
-    rankBadge = '<span class="group-rank-badge rank-badge-2">2nd</span>';
+    rankBadge = '<span class="group-rank-badge rank-badge-2">2e</span>';
   } else if (groupPicks.first && groupPicks.second) {
     rankClass = 'rank-3';
-    rankBadge = '<span class="group-rank-badge rank-badge-3">Out</span>';
+    rankBadge = '<span class="group-rank-badge rank-badge-3">Éliminé</span>';
   }
   return `
     <div class="group-team-row ${rankClass}" onclick="pickGroupTeam('${groupId}','${teamId}')">
@@ -747,10 +748,10 @@ function renderKnockoutStage(stageKey, bracketDef, title, desc) {
         </div>
       </div>
     </div>
-    ${done === total ? `<div class="alert alert-success"><span class="alert-icon">✅</span>All ${title} predictions complete!</div>` : ''}
+    ${done === total ? `<div class="alert alert-success"><span class="alert-icon">✅</span>Tous les pronostics de ${title} sont complétés !</div>` : ''}
     <div style="display:flex;gap:0.75rem;margin-bottom:1.5rem;flex-wrap:wrap">
-      ${prevStages[stageKey] ? `<button class="btn btn-ghost btn-sm" onclick="showStage('${prevStages[stageKey]}')">← Back</button>` : ''}
-      ${nextStages[stageKey] ? `<button class="btn btn-secondary btn-sm" onclick="showStage('${nextStages[stageKey]}')">Continue to next round →</button>` : ''}
+      ${prevStages[stageKey] ? `<button class="btn btn-ghost btn-sm" onclick="showStage('${prevStages[stageKey]}')">← Retour</button>` : ''}
+      ${nextStages[stageKey] ? `<button class="btn btn-secondary btn-sm" onclick="showStage('${nextStages[stageKey]}')">Continuer au tour suivant →</button>` : ''}
     </div>
     <div class="knockout-matches" id="knockout-matches-${stageKey}">
       ${matchesHtml}
@@ -781,7 +782,7 @@ function renderMatchCard(stageKey, matchId, team1Id, team2Id, winnerId, slots, t
     <div class="match-card${isDone ? ' decided' : ''}" id="match-card-${stageKey}-${matchId}">
       <div class="match-card-header">
         <span>${matchId.replace('_',' ')}</span>
-        ${isDone ? `<span style="color:var(--accent-green);font-size:0.7rem">✓ Decided</span>` : `<span>Pick winner</span>`}
+        ${isDone ? `<span style="color:var(--accent-green);font-size:0.7rem">✓ Décidé</span>` : `<span>Choisir le vainqueur</span>`}
       </div>
       <div class="match-card-body">
         ${renderTeamSlot(team1Id, Array.isArray(slots) ? slots[0] : 'TBD', team1Id === winnerId)}
@@ -832,8 +833,8 @@ function renderFinalStage() {
       return `
         <div style="background:var(--surface-2);border:2px dashed var(--border);border-radius:12px;padding:1.5rem;text-align:center;color:var(--text-dim)">
           <div style="font-size:2rem;margin-bottom:0.5rem">❓</div>
-          <div style="font-size:0.875rem">Pick ${sfId} winner first</div>
-          <button class="btn btn-ghost btn-sm" style="margin-top:0.75rem" onclick="showStage('sf')">Go to Semi-Finals</button>
+          <div style="font-size:0.875rem">Choisis d'abord le vainqueur de ${sfId}</div>
+          <button class="btn btn-ghost btn-sm" style="margin-top:0.75rem" onclick="showStage('sf')">Aller aux Demi-finales</button>
         </div>
       `;
     }
@@ -847,7 +848,7 @@ function renderFinalStage() {
         <div class="pick-info">
           <h3>${escHtml(team.name)}</h3>
           <div class="conf">${team.confederation}</div>
-          ${isWinner ? `<div class="prob-pill">🏆 Your Champion!</div>` : `<div style="font-size:0.8rem;color:var(--text-muted);margin-top:0.4rem">Click to pick as champion</div>`}
+          ${isWinner ? `<div class="prob-pill">🏆 Ton Champion !</div>` : `<div style="font-size:0.8rem;color:var(--text-muted);margin-top:0.4rem">Clique pour choisir comme champion</div>`}
         </div>
         ${isWinner ? `<span style="font-size:2rem">🏆</span>` : ''}
       </div>
@@ -857,15 +858,15 @@ function renderFinalStage() {
   return `
     <div class="bracket-hero">
       <div>
-        <h2 class="bracket-title">The Final</h2>
-        <p class="bracket-desc">The ultimate match. Pick your World Cup 2026 Champion.</p>
+        <h2 class="bracket-title">La Finale</h2>
+        <p class="bracket-desc">Le match ultime. Choisis ton champion de la Coupe du Monde 2026.</p>
       </div>
     </div>
-    ${finalWinner ? `<div class="alert alert-success"><span class="alert-icon">🏆</span>You picked <strong>${TEAMS[finalWinner].flag} ${TEAMS[finalWinner].name}</strong> as your World Cup Champion!</div>` : ''}
+    ${finalWinner ? `<div class="alert alert-success"><span class="alert-icon">🏆</span>Tu as choisi <strong>${TEAMS[finalWinner].flag} ${TEAMS[finalWinner].name}</strong> comme ton champion de la Coupe du Monde !</div>` : ''}
     <div style="display:flex;gap:0.75rem;margin-bottom:1.5rem">
-      <button class="btn btn-ghost btn-sm" onclick="showStage('sf')">← Back to Semi-Finals</button>
+      <button class="btn btn-ghost btn-sm" onclick="showStage('sf')">← Retour aux Demi-finales</button>
     </div>
-    <div style="text-align:center;font-size:0.875rem;color:var(--text-muted);margin-bottom:1rem">Click on a finalist to pick them as Champion</div>
+    <div style="text-align:center;font-size:0.875rem;color:var(--text-muted);margin-bottom:1rem">Clique sur un finaliste pour le choisir comme Champion</div>
     <div class="grid-2" style="max-width:700px;margin:0 auto">
       ${renderFinalist(sf1Winner, 'Semi-Final 1')}
       ${renderFinalist(sf2Winner, 'Semi-Final 2')}
@@ -896,22 +897,22 @@ function renderThirdSlotsStage() {
   return `
     <div class="bracket-hero">
       <div>
-        <h2 class="bracket-title">Best 8 Third-Placed Teams</h2>
-        <p class="bracket-desc">After the group stage, the 8 best third-placed teams join the 24 group qualifiers in the Round of 32. Each slot has a defined pool of eligible groups — pick which team you think qualifies from each pool.</p>
+        <h2 class="bracket-title">Les 8 Meilleurs 3es</h2>
+        <p class="bracket-desc">Après la phase de groupes, les 8 meilleurs 3es rejoignent les 24 qualifiés de groupe au 1/32 de finale. Chaque place a un pool de groupes éligibles — choisis l'équipe que tu penses qualifiée dans chaque pool.</p>
       </div>
       <div class="bracket-progress-rings">
         <div class="progress-ring-item">
           <div class="progress-ring-value">${done}</div>
           <div class="progress-ring-total">/ 8</div>
-          <div class="progress-ring-label">Slots filled</div>
+          <div class="progress-ring-label">Places remplies</div>
         </div>
       </div>
     </div>
-    ${groupsDone < 12 ? `<div class="alert alert-warning"><span class="alert-icon">⚠️</span>Complete all 12 group stage predictions to see all candidates. <button class="btn btn-ghost btn-sm" onclick="showStage('groups')">Back to Groups</button></div>` : ''}
-    ${done === 8 ? `<div class="alert alert-success"><span class="alert-icon">✅</span>All 8 third-placed slots filled! Continue to Round of 32 →</div>` : ''}
+    ${groupsDone < 12 ? `<div class="alert alert-warning"><span class="alert-icon">⚠️</span>Complète les 12 pronostics de groupes pour voir tous les candidats. <button class="btn btn-ghost btn-sm" onclick="showStage('groups')">Retour aux Groupes</button></div>` : ''}
+    ${done === 8 ? `<div class="alert alert-success"><span class="alert-icon">✅</span>Les 8 places de 3es sont remplies ! Continue vers le 1/32 de finale →</div>` : ''}
     <div style="display:flex;gap:0.75rem;margin-bottom:1.5rem;flex-wrap:wrap">
-      <button class="btn btn-ghost btn-sm" onclick="showStage('groups')">← Back to Groups</button>
-      <button class="btn btn-secondary btn-sm" onclick="showStage('r32')">Continue to Round of 32 →</button>
+      <button class="btn btn-ghost btn-sm" onclick="showStage('groups')">← Retour aux Groupes</button>
+      <button class="btn btn-secondary btn-sm" onclick="showStage('r32')">Continuer vers le 1/32 de finale →</button>
     </div>
     <div class="third-slots-grid">
       ${thirdMatches.map(m => {
@@ -938,23 +939,23 @@ function renderThirdSlotCard(slot, label, candidates, selected, otherTeam, other
   const slotNum = slot.replace('3rd-', '');
   const vsHtml = otherTeam
     ? `<div class="third-slot-vs">Will face <strong>${TEAMS[otherTeam].flag} ${TEAMS[otherTeam].name}</strong> in ${matchId.replace('_',' ')}</div>`
-    : `<div class="third-slot-vs">Opponent (${otherSlot}) — fill groups first</div>`;
+    : `<div class="third-slot-vs">Adversaire (${otherSlot}) — remplis les groupes d'abord</div>`;
 
   return `
     <div class="third-slot-card" id="third-slot-${slot}">
       <div class="third-slot-header">
         <div>
-          <span class="third-slot-num">Slot ${slotNum} of 8</span>
+          <span class="third-slot-num">Place ${slotNum} sur 8</span>
           <span class="third-slot-label">${label}</span>
         </div>
         ${selected
           ? `<span class="badge badge-green">${TEAMS[selected].flag} ${TEAMS[selected].name} ✓</span>`
-          : '<span class="badge">Not picked</span>'}
+          : '<span class="badge">Non choisi</span>'}
       </div>
       ${vsHtml}
       <div class="third-candidates">
         ${candidates.length === 0
-          ? `<p class="third-no-candidates">Fill group picks for Groups ${parseEligibleGroups(label).join(', ')} first</p>`
+          ? `<p class="third-no-candidates">Remplis les pronostics des groupes ${parseEligibleGroups(label).join(', ')} d'abord</p>`
           : candidates.map(({ teamId, group }) => {
               const team = TEAMS[teamId];
               const isSel = selected === teamId;
@@ -963,7 +964,7 @@ function renderThirdSlotCard(slot, label, candidates, selected, otherTeam, other
                   <span class="tc-flag">${team.flag}</span>
                   <div class="tc-info">
                     <div class="tc-name">${escHtml(team.name)}</div>
-                    <div class="tc-group">Group ${group} · 3rd place</div>
+                    <div class="tc-group">Groupe ${group} · 3e place</div>
                   </div>
                   ${isSel ? '<span class="tc-check">✓</span>' : ''}
                 </button>`;
@@ -1006,8 +1007,8 @@ function renderThirdPlaceStage() {
       return `
         <div style="background:var(--surface-2);border:2px dashed var(--border);border-radius:12px;padding:1.5rem;text-align:center;color:var(--text-dim)">
           <div style="font-size:2rem;margin-bottom:0.5rem">❓</div>
-          <div style="font-size:0.875rem">${label} — pick Semi-Final winners first</div>
-          <button class="btn btn-ghost btn-sm" style="margin-top:0.75rem" onclick="showStage('sf')">Go to Semi-Finals</button>
+          <div style="font-size:0.875rem">${label} — choisis d'abord les vainqueurs des demi-finales</div>
+          <button class="btn btn-ghost btn-sm" style="margin-top:0.75rem" onclick="showStage('sf')">Aller aux Demi-finales</button>
         </div>
       `;
     }
@@ -1020,7 +1021,7 @@ function renderThirdPlaceStage() {
         <div class="pick-info">
           <h3>${escHtml(team.name)}</h3>
           <div class="conf">${team.confederation}</div>
-          ${isWinner ? `<div class="prob-pill" style="background:rgba(46,125,50,0.15);color:var(--accent-green);border-color:rgba(46,125,50,0.3)">🥉 Your 3rd Place pick!</div>` : `<div style="font-size:0.8rem;color:var(--text-muted);margin-top:0.4rem">Click to pick as 3rd place</div>`}
+          ${isWinner ? `<div class="prob-pill" style="background:rgba(46,125,50,0.15);color:var(--accent-green);border-color:rgba(46,125,50,0.3)">🥉 Ton choix pour la 3e place !</div>` : `<div style="font-size:0.8rem;color:var(--text-muted);margin-top:0.4rem">Clique pour choisir à la 3e place</div>`}
         </div>
         ${isWinner ? `<span style="font-size:2rem">🥉</span>` : ''}
       </div>
@@ -1030,16 +1031,16 @@ function renderThirdPlaceStage() {
   return `
     <div class="bracket-hero">
       <div>
-        <h2 class="bracket-title">3rd Place Match</h2>
-        <p class="bracket-desc">The two losing semi-finalists compete for bronze. Pick which team finishes third.</p>
+        <h2 class="bracket-title">Match pour la 3e Place</h2>
+        <p class="bracket-desc">Les deux perdants des demi-finales s'affrontent pour le bronze. Choisis quelle équipe finit troisième.</p>
       </div>
     </div>
-    ${thirdWinner ? `<div class="alert alert-success"><span class="alert-icon">🥉</span>You picked <strong>${TEAMS[thirdWinner].flag} ${TEAMS[thirdWinner].name}</strong> to finish 3rd!</div>` : ''}
+    ${thirdWinner ? `<div class="alert alert-success"><span class="alert-icon">🥉</span>Tu as choisi <strong>${TEAMS[thirdWinner].flag} ${TEAMS[thirdWinner].name}</strong> pour la 3e place !</div>` : ''}
     <div style="display:flex;gap:0.75rem;margin-bottom:1.5rem">
-      <button class="btn btn-ghost btn-sm" onclick="showStage('sf')">← Back to Semi-Finals</button>
-      <button class="btn btn-secondary btn-sm" onclick="showStage('final')">Continue to Final →</button>
+      <button class="btn btn-ghost btn-sm" onclick="showStage('sf')">← Retour aux Demi-finales</button>
+      <button class="btn btn-secondary btn-sm" onclick="showStage('final')">Continuer vers la Finale →</button>
     </div>
-    <div style="text-align:center;font-size:0.875rem;color:var(--text-muted);margin-bottom:1rem">Click a team to pick them as 3rd place</div>
+    <div style="text-align:center;font-size:0.875rem;color:var(--text-muted);margin-bottom:1rem">Clique sur une équipe pour la choisir à la 3e place</div>
     <div class="grid-2" style="max-width:700px;margin:0 auto">
       ${renderContestant(loser1, 'SF1 loser')}
       ${renderContestant(loser2, 'SF2 loser')}
@@ -1049,7 +1050,7 @@ function renderThirdPlaceStage() {
 
 function pickFinalWinner(teamId) {
   if (!currentUser.predictions.sf['SF_1'] || !currentUser.predictions.sf['SF_2']) {
-    showToast('Please pick your semi-final winners first!', 'warning');
+    showToast('Choisis d\'abord tes vainqueurs des demi-finales !', 'warning');
     return;
   }
   if (currentUser.predictions.final === teamId) {
@@ -1064,7 +1065,7 @@ function pickFinalWinner(teamId) {
   showStage('final');
   if (activeTab === 'home') renderHome();
   if (teamId && currentUser.predictions.final === teamId) {
-    showToast(`${TEAMS[teamId].flag} ${TEAMS[teamId].name} is your World Cup Champion!`);
+    showToast(`${TEAMS[teamId].flag} ${TEAMS[teamId].name} est ton Champion de la Coupe du Monde !`);
   }
 }
 
@@ -1072,7 +1073,7 @@ function pickThirdPlaceWinner(teamId) {
   currentUser.predictions.thirdplace = teamId;
   saveStorage();
   showStage('thirdplace');
-  showToast(`🥉 ${TEAMS[teamId].name} picked for 3rd place!`, 'success');
+  showToast(`🥉 ${TEAMS[teamId].name} choisi pour la 3e place !`, 'success');
 }
 
 // ---- RESOLVE SLOT ----
@@ -1132,17 +1133,17 @@ function renderLeaderboard() {
         <div><div class="rank-num ${rankClass}">${i + 1}</div></div>
         <div class="lb-user">
           <div class="lb-avatar" style="background:linear-gradient(135deg,${u.color1},${u.color2})">${u.name.charAt(0).toUpperCase()}</div>
-          <span class="lb-name">${escHtml(u.name)}${isCurrent ? '<span class="lb-you-tag">YOU</span>' : ''}</span>
+          <span class="lb-name">${escHtml(u.name)}${isCurrent ? '<span class="lb-you-tag">TOI</span>' : ''}</span>
         </div>
         <div class="lb-champion">
-          ${champion ? `<span class="lb-champion-flag">${champion.flag}</span><span class="lb-champion-name">${escHtml(champion.name)}</span>` : '<span class="no-pick-text-sm">No pick yet</span>'}
+          ${champion ? `<span class="lb-champion-flag">${champion.flag}</span><span class="lb-champion-name">${escHtml(champion.name)}</span>` : '<span class="no-pick-text-sm">Pas encore de choix</span>'}
         </div>
         <div class="lb-score-col">
           <div class="lb-score">—</div>
-          <div class="lb-score-label">pts (TBD)</div>
+          <div class="lb-score-label">pts (à venir)</div>
         </div>
         <div class="lb-bracket">
-          <span class="bracket-fill-badge">${done.total} picks</span>
+          <span class="bracket-fill-badge">${done.total} pronostics</span>
         </div>
       </div>
     `;
@@ -1170,10 +1171,10 @@ function exportData() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `itcilo-wc2026-picks-${new Date().toISOString().slice(0,10)}.json`;
+  a.download = `lesboys-cdm2026-pronostics-${new Date().toISOString().slice(0,10)}.json`;
   a.click();
   URL.revokeObjectURL(url);
-  showToast('Predictions exported!');
+  showToast('Pronostics exportés !');
 }
 
 function importData() {
@@ -1188,7 +1189,7 @@ function importData() {
       try {
         const imported = JSON.parse(ev.target.result);
         if (!imported.users || !Array.isArray(imported.users)) {
-          showToast('Invalid file format', 'error');
+          showToast('Format de fichier invalide', 'error');
           return;
         }
         // Merge users: add new ones, update existing
@@ -1199,10 +1200,10 @@ function importData() {
           }
         });
         saveStorage();
-        showToast(`Imported ${imported.users.length} users!`);
+        showToast(`${imported.users.length} utilisateur(s) importé(s) !`);
         renderTab(activeTab);
       } catch {
-        showToast('Failed to parse file', 'error');
+        showToast('Impossible de lire le fichier', 'error');
       }
     };
     reader.readAsText(file);

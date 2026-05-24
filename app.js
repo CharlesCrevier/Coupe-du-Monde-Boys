@@ -134,9 +134,9 @@ setInterval(() => { if (!document.hidden) cloudPull(); }, 60000);
 function createEmptyPredictions() {
   return {
     champion: null,
-    groups: {}, // { A: { first: teamId, second: teamId }, ... }
-    third: [],  // up to 8 teamIds selected as 3rd-place qualifiers
-    r32: {},    // { R32_1: teamId, ... }
+    groups: {},      // { A: { first: teamId, second: teamId }, ... }
+    thirdSlots: {},  // { '3rd-1': teamId, ..., '3rd-8': teamId }
+    r32: {},         // { R32_1: teamId, ... }
     r16: {},
     qf: {},
     sf: {},
@@ -167,10 +167,12 @@ function init() {
   allUsers = data.users || [];
   currentUser = allUsers.find(u => u.id === data.currentUserId) || null;
 
-  // Migrate old predictions if needed
+  // Migrate predictions
   allUsers.forEach(u => {
     if (!u.predictions) u.predictions = createEmptyPredictions();
-    if (!u.predictions.third) u.predictions.third = [];
+    if (!u.predictions.thirdSlots) u.predictions.thirdSlots = {};
+    if (u.predictions.thirdplace === undefined) u.predictions.thirdplace = null;
+    if (u.predictions.final === undefined) u.predictions.final = null;
   });
 
   if (currentUser) {
@@ -568,18 +570,19 @@ function renderBracket() {
 
 function renderStageTabsProgress() {
   const picks = currentUser.predictions;
-  const stages = ['groups', 'r32', 'r16', 'qf', 'sf', 'thirdplace', 'final'];
-  const totals = { groups: 12, r32: 16, r16: 8, qf: 4, sf: 2, thirdplace: 1, final: 1 };
+  const stages = ['groups', 'thirdslots', 'r32', 'r16', 'qf', 'sf', 'thirdplace', 'final'];
+  const totals = { groups: 12, thirdslots: 8, r32: 16, r16: 8, qf: 4, sf: 2, thirdplace: 1, final: 1 };
   const done = {
-    groups: Object.values(picks.groups).filter(g => g.first && g.second).length,
-    r32: Object.keys(picks.r32).length,
-    r16: Object.keys(picks.r16).length,
-    qf: Object.keys(picks.qf).length,
-    sf: Object.keys(picks.sf).length,
+    groups:     Object.values(picks.groups).filter(g => g.first && g.second).length,
+    thirdslots: Object.keys(picks.thirdSlots || {}).length,
+    r32:        Object.keys(picks.r32).length,
+    r16:        Object.keys(picks.r16).length,
+    qf:         Object.keys(picks.qf).length,
+    sf:         Object.keys(picks.sf).length,
     thirdplace: picks.thirdplace ? 1 : 0,
-    final: picks.final ? 1 : 0,
+    final:      picks.final ? 1 : 0,
   };
-  const labels = { groups: 'Groups', r32: 'Round of 32', r16: 'Round of 16', qf: 'Quarter-Finals', sf: 'Semi-Finals', thirdplace: '3rd Place', final: 'Final' };
+  const labels = { groups: 'Groups', thirdslots: 'Best 8 Third', r32: 'Round of 32', r16: 'Round of 16', qf: 'Quarter-Finals', sf: 'Semi-Finals', thirdplace: '3rd Place', final: 'Final' };
 
   document.getElementById('stage-tabs').innerHTML = stages.map(s => {
     const isComplete = done[s] >= totals[s];
@@ -599,7 +602,8 @@ function showStage(stage) {
   renderStageTabsProgress();
   const container = document.getElementById('bracket-stage-content');
   switch(stage) {
-    case 'groups': container.innerHTML = renderGroupsStage(); break;
+    case 'groups':     container.innerHTML = renderGroupsStage(); break;
+    case 'thirdslots': container.innerHTML = renderThirdSlotsStage(); break;
     case 'r32': container.innerHTML = renderKnockoutStage('r32', R32_BRACKET, 'Round of 32', 'Pick the winner of each Round of 32 match'); break;
     case 'r16': container.innerHTML = renderKnockoutStage('r16', R16_BRACKET, 'Round of 16', 'Pick the winner of each Round of 16 match'); break;
     case 'qf': container.innerHTML = renderKnockoutStage('qf', QF_BRACKET, 'Quarter-Finals', 'Pick your quarter-final winners'); break;
@@ -628,12 +632,12 @@ function renderGroupsStage() {
         </div>
       </div>
     </div>
-    ${complete === 12 ? `<div class="alert alert-success"><span class="alert-icon">✅</span>All group predictions complete! Continue to Round of 32 →</div>` : ''}
+    ${complete === 12 ? `<div class="alert alert-success"><span class="alert-icon">✅</span>All group predictions complete! Continue to pick the Best 8 Third-Placed Teams →</div>` : ''}
     <div class="groups-grid">
       ${Object.keys(GROUPS).map(g => renderGroupCard(g, GROUPS[g], picks[g] || {})).join('')}
     </div>
     <div style="margin-top:1.5rem">
-      <button class="btn btn-secondary" onclick="showStage('r32')">Continue to Round of 32 →</button>
+      <button class="btn btn-secondary" onclick="showStage('thirdslots')">Continue: Pick Best 8 Third-Placed Teams →</button>
     </div>
   `;
 }
@@ -727,7 +731,7 @@ function renderKnockoutStage(stageKey, bracketDef, title, desc) {
 
   // Determine next stage button
   const nextStages = { r32: 'r16', r16: 'qf', qf: 'sf', sf: 'thirdplace', thirdplace: 'final' };
-  const prevStages = { r32: 'groups', r16: 'r32', qf: 'r16', sf: 'qf', thirdplace: 'sf', final: 'thirdplace' };
+  const prevStages = { r32: 'thirdslots', r16: 'r32', qf: 'r16', sf: 'qf', thirdplace: 'sf', final: 'thirdplace' };
 
   return `
     <div class="bracket-hero">
@@ -872,6 +876,115 @@ function renderFinalStage() {
   `;
 }
 
+// ---- BEST 8 THIRD-PLACED TEAMS ----
+function parseEligibleGroups(thirdLabel) {
+  const m = thirdLabel && thirdLabel.match(/\(([^)]+)\)/);
+  return m ? m[1].split('/') : [];
+}
+
+function renderThirdSlotsStage() {
+  const picks = currentUser.predictions;
+  const thirdMatches = R32_BRACKET.filter(m =>
+    (m.slot1 && m.slot1.startsWith('3rd-')) || (m.slot2 && m.slot2.startsWith('3rd-'))
+  );
+  const done = thirdMatches.filter(m => {
+    const slot = (m.slot1 && m.slot1.startsWith('3rd-')) ? m.slot1 : m.slot2;
+    return !!(picks.thirdSlots || {})[slot];
+  }).length;
+  const groupsDone = Object.values(picks.groups).filter(g => g.first && g.second).length;
+
+  return `
+    <div class="bracket-hero">
+      <div>
+        <h2 class="bracket-title">Best 8 Third-Placed Teams</h2>
+        <p class="bracket-desc">After the group stage, the 8 best third-placed teams join the 24 group qualifiers in the Round of 32. Each slot has a defined pool of eligible groups — pick which team you think qualifies from each pool.</p>
+      </div>
+      <div class="bracket-progress-rings">
+        <div class="progress-ring-item">
+          <div class="progress-ring-value">${done}</div>
+          <div class="progress-ring-total">/ 8</div>
+          <div class="progress-ring-label">Slots filled</div>
+        </div>
+      </div>
+    </div>
+    ${groupsDone < 12 ? `<div class="alert alert-warning"><span class="alert-icon">⚠️</span>Complete all 12 group stage predictions to see all candidates. <button class="btn btn-ghost btn-sm" onclick="showStage('groups')">Back to Groups</button></div>` : ''}
+    ${done === 8 ? `<div class="alert alert-success"><span class="alert-icon">✅</span>All 8 third-placed slots filled! Continue to Round of 32 →</div>` : ''}
+    <div style="display:flex;gap:0.75rem;margin-bottom:1.5rem;flex-wrap:wrap">
+      <button class="btn btn-ghost btn-sm" onclick="showStage('groups')">← Back to Groups</button>
+      <button class="btn btn-secondary btn-sm" onclick="showStage('r32')">Continue to Round of 32 →</button>
+    </div>
+    <div class="third-slots-grid">
+      ${thirdMatches.map(m => {
+        const slot = (m.slot1 && m.slot1.startsWith('3rd-')) ? m.slot1 : m.slot2;
+        const otherSlot = slot === m.slot1 ? m.slot2 : m.slot1;
+        const label = m.thirdLabel || '';
+        const eligibleGroups = parseEligibleGroups(label);
+        const candidates = eligibleGroups.flatMap(g => {
+          if (!GROUPS[g]) return [];
+          const gp = picks.groups[g] || {};
+          return GROUPS[g]
+            .filter(t => t !== gp.first && t !== gp.second)
+            .map(t => ({ teamId: t, group: g }));
+        });
+        const selected = (picks.thirdSlots || {})[slot] || null;
+        const otherTeam = resolveSlot(otherSlot, picks);
+        return renderThirdSlotCard(slot, label, candidates, selected, otherTeam, otherSlot, m.id);
+      }).join('')}
+    </div>
+  `;
+}
+
+function renderThirdSlotCard(slot, label, candidates, selected, otherTeam, otherSlot, matchId) {
+  const slotNum = slot.replace('3rd-', '');
+  const vsHtml = otherTeam
+    ? `<div class="third-slot-vs">Will face <strong>${TEAMS[otherTeam].flag} ${TEAMS[otherTeam].name}</strong> in ${matchId.replace('_',' ')}</div>`
+    : `<div class="third-slot-vs">Opponent (${otherSlot}) — fill groups first</div>`;
+
+  return `
+    <div class="third-slot-card" id="third-slot-${slot}">
+      <div class="third-slot-header">
+        <div>
+          <span class="third-slot-num">Slot ${slotNum} of 8</span>
+          <span class="third-slot-label">${label}</span>
+        </div>
+        ${selected
+          ? `<span class="badge badge-green">${TEAMS[selected].flag} ${TEAMS[selected].name} ✓</span>`
+          : '<span class="badge">Not picked</span>'}
+      </div>
+      ${vsHtml}
+      <div class="third-candidates">
+        ${candidates.length === 0
+          ? `<p class="third-no-candidates">Fill group picks for Groups ${parseEligibleGroups(label).join(', ')} first</p>`
+          : candidates.map(({ teamId, group }) => {
+              const team = TEAMS[teamId];
+              const isSel = selected === teamId;
+              return `
+                <button class="third-candidate${isSel ? ' selected' : ''}" onclick="pickThirdSlot('${slot}','${teamId}')">
+                  <span class="tc-flag">${team.flag}</span>
+                  <div class="tc-info">
+                    <div class="tc-name">${escHtml(team.name)}</div>
+                    <div class="tc-group">Group ${group} · 3rd place</div>
+                  </div>
+                  ${isSel ? '<span class="tc-check">✓</span>' : ''}
+                </button>`;
+            }).join('')
+        }
+      </div>
+    </div>
+  `;
+}
+
+function pickThirdSlot(slot, teamId) {
+  if (!currentUser.predictions.thirdSlots) currentUser.predictions.thirdSlots = {};
+  if (currentUser.predictions.thirdSlots[slot] === teamId) {
+    delete currentUser.predictions.thirdSlots[slot];
+  } else {
+    currentUser.predictions.thirdSlots[slot] = teamId;
+  }
+  saveStorage();
+  showStage('thirdslots');
+}
+
 function renderThirdPlaceStage() {
   const picks = currentUser.predictions;
 
@@ -989,8 +1102,7 @@ function resolveSlot(slot, picks) {
 
   // 3rd place qualifier slots
   if (slot.startsWith('3rd-')) {
-    const idx = parseInt(slot.replace('3rd-', '')) - 1;
-    return (picks.third || [])[idx] || null;
+    return (picks.thirdSlots || {})[slot] || null;
   }
 
   return null;

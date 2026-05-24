@@ -317,6 +317,21 @@ body {
 }
 .btn-icon:hover { border-color: var(--accent); color: var(--accent); }
 
+/* ===== SYNC BADGE ===== */
+.sync-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  font-size: 0.75rem; font-weight: 700;
+  transition: all 0.25s;
+  cursor: default;
+}
+.sync-idle { background: rgba(0,73,150,0.10); color: var(--accent); }
+.sync-ing  { background: rgba(0,73,150,0.15); color: var(--accent); animation: spin 1s linear infinite; }
+.sync-ok   { background: rgba(46,125,50,0.15); color: #2e7d32; }
+.sync-err  { background: rgba(198,40,40,0.15); color: var(--danger); }
+@keyframes spin { to { transform: rotate(360deg); } }
+
 /* ===== CARDS ===== */
 .card {
   background: var(--surface);

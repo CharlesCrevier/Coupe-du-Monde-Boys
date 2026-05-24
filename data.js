@@ -2,6 +2,11 @@
 // ITCILO World Cup 2026 - Tournament Data
 // ============================================================
 
+// Cloud sync — create a free account at jsonbin.io, make a bin with
+// content {"users":[]}, then paste the Bin ID and Master Key below.
+const CLOUD_BIN_ID  = '';   // e.g. '6837abc1acd3cb34a8123456'
+const CLOUD_API_KEY = '';   // Master Key from jsonbin.io → API Keys
+
 const GROUPS = {
   A: ['MEX', 'KOR', 'RSA', 'CZE'],
   B: ['CAN', 'BIH', 'QAT', 'CHE'],

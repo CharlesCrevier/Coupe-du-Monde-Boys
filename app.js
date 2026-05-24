@@ -27,10 +27,109 @@ function loadStorage() {
   } catch { return { users: [], currentUserId: null }; }
 }
 
-function saveStorage() {
+function saveStorage(pushCloud = true) {
   const data = { users: allUsers, currentUserId: currentUser ? currentUser.id : null };
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  if (pushCloud) cloudPush();
 }
+
+// ============================================================
+// Cloud Sync (JSONBin.io)
+// ============================================================
+const CLOUD_ENABLED = typeof CLOUD_BIN_ID !== 'undefined' && CLOUD_BIN_ID !== '';
+const CLOUD_BASE    = 'https://api.jsonbin.io/v3/b';
+let   _syncBusy     = false;
+
+async function _cloudFetch() {
+  const r = await fetch(`${CLOUD_BASE}/${CLOUD_BIN_ID}/latest`, {
+    headers: { 'X-Access-Key': CLOUD_API_KEY }
+  });
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  return (await r.json()).record?.users ?? [];
+}
+
+async function cloudPull() {
+  if (!CLOUD_ENABLED) return;
+  try {
+    const remote = await _cloudFetch();
+    let changed = false;
+    for (const ru of remote) {
+      // Migrate remote user predictions if needed
+      if (!ru.predictions) ru.predictions = createEmptyPredictions();
+      if (!ru.predictions.third) ru.predictions.third = [];
+      const idx = allUsers.findIndex(u => u.id === ru.id);
+      if (idx < 0) {
+        allUsers.push(ru);
+        changed = true;
+      } else if (ru.id !== currentUser?.id) {
+        allUsers[idx] = ru;
+        changed = true;
+      }
+    }
+    if (changed) {
+      saveStorage(false);
+      const loginList = document.getElementById('existing-users-list');
+      if (loginList) renderExistingUsers();
+      if (activeTab) renderTab(activeTab);
+    }
+    setSyncBadge('ok');
+  } catch {
+    setSyncBadge('error');
+  }
+}
+
+async function cloudPush() {
+  if (!CLOUD_ENABLED || _syncBusy) return;
+  _syncBusy = true;
+  setSyncBadge('syncing');
+  try {
+    const remote = await _cloudFetch();
+    const merged = [...remote];
+    for (const u of allUsers) {
+      const i = merged.findIndex(x => x.id === u.id);
+      i >= 0 ? (merged[i] = u) : merged.push(u);
+    }
+    const r = await fetch(`${CLOUD_BASE}/${CLOUD_BIN_ID}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'X-Access-Key': CLOUD_API_KEY },
+      body: JSON.stringify({ users: merged })
+    });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    setSyncBadge('ok');
+  } catch {
+    setSyncBadge('error');
+  } finally {
+    _syncBusy = false;
+  }
+}
+
+function setSyncBadge(state) {
+  const el = document.getElementById('sync-status');
+  if (!el) return;
+  if (!CLOUD_ENABLED) return;
+  const map = {
+    syncing: ['sync-ing', '⟳', 'Syncing with cloud…'],
+    ok:      ['sync-ok', '✓', 'All predictions synced'],
+    error:   ['sync-err', '!', 'Sync failed — changes saved locally'],
+  };
+  const [cls, icon, tip] = map[state];
+  el.className = `sync-badge ${cls}`;
+  el.textContent = icon;
+  el.title = tip;
+  if (state === 'ok') {
+    setTimeout(() => {
+      if (el.textContent === '✓') {
+        el.className = 'sync-badge sync-idle';
+        el.textContent = '☁';
+        el.title = 'Cloud sync active';
+      }
+    }, 2500);
+  }
+}
+
+// Pull on window focus and every 60 s
+document.addEventListener('visibilitychange', () => { if (!document.hidden) cloudPull(); });
+setInterval(() => { if (!document.hidden) cloudPull(); }, 60000);
 
 function createEmptyPredictions() {
   return {
@@ -79,6 +178,7 @@ function init() {
   } else {
     showLoginScreen();
   }
+  cloudPull(); // merge remote users in background (updates login list & leaderboard)
 }
 
 // ============================================================

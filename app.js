@@ -8,13 +8,25 @@ const STORAGE_KEY = 'lesboys_cdm2026_v2';
 // State
 // ============================================================
 let currentUser = null;
-let allUsers = [];
-let activeTab = 'home';
+let allUsers    = [];
+let watchParties = createEmptyWatchParties();
+let activeTab    = 'home';
 let activeStagTab = 'groups';
-let teamsFilter = 'ALL';
-let teamsSearch = '';
-let teamsSort = 'prob';
+let teamsFilter  = 'ALL';
+let teamsSearch  = '';
+let teamsSort    = 'prob';
 let openTeamModal = null;
+
+// ============================================================
+// Watch Party data structure
+// ============================================================
+function createEmptyWatchParties() {
+  return {
+    game1: { host: null, attendees: [] },  // Uruguay vs Espagne  27 juin 15h
+    game2: { host: null, attendees: [] },  // Croatie vs Ghana    27 juin 18h
+    game3: { host: null, attendees: [] },  // Colombie vs Portugal 28 juin 15h
+  };
+}
 
 // ============================================================
 // Storage helpers
@@ -22,13 +34,19 @@ let openTeamModal = null;
 function loadStorage() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { users: [], currentUserId: null };
-    return JSON.parse(raw);
-  } catch { return { users: [], currentUserId: null }; }
+    if (!raw) return { users: [], currentUserId: null, watchParties: createEmptyWatchParties() };
+    const d = JSON.parse(raw);
+    if (!d.watchParties) d.watchParties = createEmptyWatchParties();
+    return d;
+  } catch { return { users: [], currentUserId: null, watchParties: createEmptyWatchParties() }; }
 }
 
 function saveStorage(pushCloud = true) {
-  const data = { users: allUsers, currentUserId: currentUser ? currentUser.id : null };
+  const data = {
+    users: allUsers,
+    currentUserId: currentUser ? currentUser.id : null,
+    watchParties,
+  };
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   if (pushCloud) cloudPush();
 }
@@ -45,27 +63,35 @@ async function _cloudFetch() {
     headers: { 'X-Master-Key': CLOUD_API_KEY }
   });
   if (!r.ok) throw new Error(`HTTP ${r.status}`);
-  return (await r.json()).record?.users ?? [];
+  const rec = (await r.json()).record ?? {};
+  return { users: rec.users ?? [], watchParties: rec.watchParties ?? createEmptyWatchParties() };
 }
 
 async function cloudPull() {
   if (!CLOUD_ENABLED) return;
   try {
-    const remote = await _cloudFetch();
+    const { users: remoteUsers, watchParties: remoteWP } = await _cloudFetch();
     let changed = false;
-    for (const ru of remote) {
-      // Migrate remote user predictions if needed
+
+    // --- merge users ---
+    for (const ru of remoteUsers) {
       if (!ru.predictions) ru.predictions = createEmptyPredictions();
       if (!ru.predictions.third) ru.predictions.third = [];
       const idx = allUsers.findIndex(u => u.id === ru.id);
-      if (idx < 0) {
-        allUsers.push(ru);
-        changed = true;
-      } else if (ru.id !== currentUser?.id) {
-        allUsers[idx] = ru;
+      if (idx < 0) { allUsers.push(ru); changed = true; }
+      else if (ru.id !== currentUser?.id) { allUsers[idx] = ru; changed = true; }
+    }
+
+    // --- merge watchParties (remote wins unless nothing changed remotely) ---
+    for (const gId of Object.keys(createEmptyWatchParties())) {
+      const r = remoteWP[gId] || { host: null, attendees: [] };
+      const l = watchParties[gId] || { host: null, attendees: [] };
+      if (JSON.stringify(r) !== JSON.stringify(l)) {
+        watchParties[gId] = r;
         changed = true;
       }
     }
+
     if (changed) {
       saveStorage(false);
       const loginList = document.getElementById('existing-users-list');
@@ -73,9 +99,7 @@ async function cloudPull() {
       if (activeTab) renderTab(activeTab);
     }
     setSyncBadge('ok');
-  } catch {
-    setSyncBadge('error');
-  }
+  } catch { setSyncBadge('error'); }
 }
 
 async function cloudPush() {
@@ -83,24 +107,35 @@ async function cloudPush() {
   _syncBusy = true;
   setSyncBadge('syncing');
   try {
-    const remote = await _cloudFetch();
-    const merged = [...remote];
+    const { users: remoteUsers, watchParties: remoteWP } = await _cloudFetch();
+
+    // merge users
+    const mergedUsers = [...remoteUsers];
     for (const u of allUsers) {
-      const i = merged.findIndex(x => x.id === u.id);
-      i >= 0 ? (merged[i] = u) : merged.push(u);
+      const i = mergedUsers.findIndex(x => x.id === u.id);
+      i >= 0 ? (mergedUsers[i] = u) : mergedUsers.push(u);
     }
+
+    // merge watchParties: union of attendees, non-null host wins (local takes priority)
+    const mergedWP = {};
+    for (const gId of Object.keys(createEmptyWatchParties())) {
+      const rem = remoteWP[gId] || { host: null, attendees: [] };
+      const loc = watchParties[gId] || { host: null, attendees: [] };
+      mergedWP[gId] = {
+        host: loc.host ?? rem.host,
+        attendees: [...new Set([...rem.attendees, ...loc.attendees])],
+      };
+    }
+
     const r = await fetch(`${CLOUD_BASE}/${CLOUD_BIN_ID}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', 'X-Master-Key': CLOUD_API_KEY },
-      body: JSON.stringify({ users: merged })
+      body: JSON.stringify({ users: mergedUsers, watchParties: mergedWP }),
     });
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     setSyncBadge('ok');
-  } catch {
-    setSyncBadge('error');
-  } finally {
-    _syncBusy = false;
-  }
+  } catch { setSyncBadge('error'); }
+  finally { _syncBusy = false; }
 }
 
 function setSyncBadge(state) {
@@ -164,7 +199,8 @@ document.addEventListener('DOMContentLoaded', init);
 
 function init() {
   const data = loadStorage();
-  allUsers = data.users || [];
+  allUsers    = data.users || [];
+  watchParties = data.watchParties || createEmptyWatchParties();
   currentUser = allUsers.find(u => u.id === data.currentUserId) || null;
 
   // Migrate predictions
@@ -263,7 +299,8 @@ function renderTab(tab) {
     case 'teams': renderTeams(); break;
     case 'bracket': renderBracket(); break;
     case 'leaderboard': renderLeaderboard(); break;
-    case 'coaches': /* contenu statique dans le HTML — rien à rendre */ break;
+    case 'coaches':    /* contenu statique dans le HTML */ break;
+    case 'watchparty': renderWatchParties(); break;
   }
 }
 
@@ -1276,6 +1313,178 @@ document.addEventListener('DOMContentLoaded', function() {
     setTeamsSort(this.value);
   });
 });
+
+// ============================================================
+// Watch Party — Visionnement Stratégique
+// ============================================================
+
+const WATCH_GAMES = [
+  {
+    id: 'game1',
+    date: '27 juin · 15h00',
+    teams: 'Uruguay 🇺🇾 vs 🇪🇸 Espagne',
+    emoji: '🛋️',
+    coachAlert: '⚠️ Lowis — ton Espagne joue. T\'as plus d\'excuse pour pas organiser.',
+    context: `L'ENJEU : Lowis doit <em>obligatoirement</em> regarder ce match. Son Espagne tient le ballon 70% du temps, ce qui lui ressemble pas mal — sauf que Lowis, lui, tient son beer 70% du temps. Darwin Núñez d'Uruguay court dans tous les sens comme Lowis quand l'internet lag pendant un gros push en prod. Match à 15h : parfait pour un apéro qui commence tôt avec une bonne excuse. <strong>Lowis, c'est ton match. Lève-toi du sofa. Pas pour jouer — pour organiser.</strong>`,
+    stakeEmoji: '🍺',
+  },
+  {
+    id: 'game2',
+    date: '27 juin · 18h00',
+    teams: 'Croatie 🇭🇷 vs 🇬🇭 Ghana',
+    emoji: '🎭',
+    coachAlert: null,
+    context: `L'ENJEU : Modrić à 40 ans qui essaie encore de contrôler le jeu comme Killer essaie encore de raconter la même histoire de chasse de 1997. Contre le Ghana de Kudus, qui dribble comme Rod improvise à la guitare — on sait jamais trop où ça s'en va mais c'est enthousiasmant. Match à 18h : soit pile l'heure du souper. <strong>L'hôte devra donc nourrir tout le monde.</strong> Bonne chance pour convaincre quelqu'un de lever la main.`,
+    stakeEmoji: '🍖',
+  },
+  {
+    id: 'game3',
+    date: '28 juin · 15h00',
+    teams: 'Colombie 🇨🇴 vs 🇵🇹 Portugal',
+    emoji: '🏦',
+    coachAlert: '⚠️ Bloke — ton Portugal joue. Ta blonde sud-africaine est déjà en train de préparer des sandwichs.',
+    context: `L'ENJEU : LA game des coachs. Bloke <em>DOIT</em> organiser — son Portugal joue et sa blonde sud-africaine supportera le Portugal par loyauté conjugale. Rod supporte techniquement la Colombie parce qu'il est passé à Bogotá en 2019 pour un festival de musique dont il parle encore. <strong>James Rodríguez vs Bruno Fernandes = Rod vs Bloke.</strong> C'est personnel. On mérite du spectacle dans une grosse maison de banquier.`,
+    stakeEmoji: '🏆',
+  },
+];
+
+function renderWatchParties() {
+  const container = document.getElementById('watchparty-content');
+  if (!container) return;
+  renderWatchPartySummary();
+  const name = currentUser ? currentUser.name : null;
+
+  container.innerHTML = WATCH_GAMES.map(g => {
+    const wp      = watchParties[g.id] || { host: null, attendees: [] };
+    const isHost  = name && wp.host === name;
+    const isGoing = name && wp.attendees.includes(name);
+    const hasHost = !!wp.host;
+    const goingList = [
+      ...(wp.host ? [`🏠 <strong>${escHtml(wp.host)}</strong> <span style="font-size:0.75rem;opacity:0.7">(hôte)</span>`] : []),
+      ...wp.attendees.filter(a => a !== wp.host).map(a => `🍺 ${escHtml(a)}`),
+    ];
+
+    return `
+    <div class="card" style="border-left:4px solid var(--accent);margin-bottom:1.5rem" id="wp-card-${g.id}">
+
+      <!-- Header du match -->
+      <div style="display:flex;align-items:center;gap:1rem;margin-bottom:0.75rem;flex-wrap:wrap">
+        <span style="font-size:2.5rem">${g.emoji}</span>
+        <div style="flex:1">
+          <div style="font-size:1.1rem;font-weight:800">${g.teams}</div>
+          <div style="font-size:0.82rem;color:var(--text-dim);margin-top:0.2rem">📅 ${g.date}</div>
+        </div>
+        <span style="font-size:1.75rem">${g.stakeEmoji}</span>
+      </div>
+
+      ${g.coachAlert ? `<div class="alert alert-warning" style="margin-bottom:0.75rem;padding:0.5rem 0.75rem;font-size:0.82rem"><span class="alert-icon">🚨</span>${g.coachAlert}</div>` : ''}
+
+      <!-- Contexte stratégique -->
+      <div style="font-size:0.875rem;line-height:1.7;color:var(--text);background:var(--surface-2);border-radius:10px;padding:0.875rem;margin-bottom:1rem">
+        <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-dim);margin-bottom:0.4rem">📋 Contexte stratégique</div>
+        ${g.context}
+      </div>
+
+      <!-- Qui est là -->
+      <div style="margin-bottom:1rem">
+        <div style="font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-dim);margin-bottom:0.5rem">
+          Qui est dans le coup ?
+          <span style="font-weight:400;text-transform:none;letter-spacing:0">(${goingList.length} confirmé${goingList.length > 1 ? 's' : ''})</span>
+        </div>
+        ${goingList.length > 0
+          ? `<div style="display:flex;flex-wrap:wrap;gap:0.4rem">${
+              goingList.map(item => `<span style="background:var(--surface-2);border:1px solid var(--border);border-radius:20px;padding:0.3rem 0.75rem;font-size:0.82rem">${item}</span>`).join('')
+            }</div>`
+          : `<p style="font-size:0.82rem;color:var(--text-dim);font-style:italic">Personne encore... les boys dorment encore deboutte. 😴</p>`
+        }
+      </div>
+
+      <!-- Boutons d'action -->
+      ${name ? `
+      <div style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-top:0.75rem">
+        <button
+          class="btn ${isHost ? 'btn-primary' : 'btn-secondary'}"
+          style="flex:1;min-width:140px"
+          onclick="toggleHost('${g.id}')">
+          ${isHost ? '🏠 T\'héberges déjà ✓' : hasHost ? `🏠 Hébergé par ${escHtml(wp.host)}` : '🏠 J\'héberge ça !'}
+        </button>
+        <button
+          class="btn ${isGoing ? 'btn-primary' : 'btn-ghost'}"
+          style="flex:1;min-width:140px"
+          onclick="toggleAttend('${g.id}')">
+          ${isGoing ? '🍺 Je serai là ✓' : '🍺 J\'y serai !'}
+        </button>
+      </div>
+      ${isHost && !isGoing ? `<p style="font-size:0.75rem;color:var(--text-dim);margin-top:0.4rem;font-style:italic">💡 T\'es l\'hôte — clique "J\'y serai" pour confirmer ta présence aussi.</p>` : ''}
+      ` : `<p style="font-size:0.82rem;color:var(--text-dim);font-style:italic">Connecte-toi pour indiquer ta présence.</p>`}
+    </div>`;
+  }).join('');
+}
+
+function toggleHost(gameId) {
+  if (!currentUser) return;
+  const wp = watchParties[gameId];
+  if (wp.host === currentUser.name) {
+    wp.host = null; // annuler
+  } else {
+    wp.host = currentUser.name;
+  }
+  saveStorage();
+  renderWatchParties();
+  showToast(wp.host ? `🏠 ${currentUser.name} héberge le ${WATCH_GAMES.find(g=>g.id===gameId).date} !` : '🏠 Hébergement annulé.', wp.host ? 'success' : 'warning');
+}
+
+function toggleAttend(gameId) {
+  if (!currentUser) return;
+  const wp = watchParties[gameId];
+  const idx = wp.attendees.indexOf(currentUser.name);
+  if (idx >= 0) {
+    wp.attendees.splice(idx, 1);
+    showToast('Présence annulée.', 'warning');
+  } else {
+    wp.attendees.push(currentUser.name);
+    showToast(`🍺 ${currentUser.name} sera là !`, 'success');
+  }
+  saveStorage();
+  renderWatchParties();
+}
+
+function renderWatchPartySummary() {
+  const el = document.getElementById('watchparty-summary');
+  if (!el) return;
+
+  // Build per-coach engagement stats
+  const KNOWN_COACHES = ['Foug','Killer','Stich','Rod','Lowis','Jo','Bloke','Begood'];
+  const allNames = new Set([
+    ...KNOWN_COACHES,
+    ...Object.values(watchParties).flatMap(wp => [wp.host, ...wp.attendees].filter(Boolean))
+  ]);
+
+  const rows = [...allNames].map(name => {
+    const hosted   = WATCH_GAMES.filter(g => watchParties[g.id]?.host === name).length;
+    const attending = WATCH_GAMES.filter(g => watchParties[g.id]?.attendees.includes(name)).length;
+    const total = hosted + attending;
+    let medal = '😴';
+    let label = 'En mode grotte';
+    if (hosted >= 1 && attending >= 1) { medal = '🏆'; label = 'Coach de l\'année'; }
+    else if (hosted >= 1)  { medal = '🏠'; label = 'Hôte dévoué'; }
+    else if (attending >= 2){ medal = '🍺🍺'; label = 'Participant assidu'; }
+    else if (attending >= 1){ medal = '🍺'; label = 'Montre des signes de vie'; }
+    return { name, hosted, attending, total, medal, label };
+  }).sort((a,b) => b.total - a.total);
+
+  el.innerHTML = `<div style="display:flex;flex-direction:column;gap:0.4rem">` +
+    rows.map((r, i) => `
+      <div style="display:flex;align-items:center;gap:0.75rem;padding:0.5rem 0.75rem;background:var(--surface-2);border-radius:10px;${r.name === currentUser?.name ? 'border:1px solid var(--accent)' : ''}">
+        <span style="font-size:1.1rem;min-width:24px;text-align:center">${r.medal}</span>
+        <span style="font-weight:700;flex:1">${escHtml(r.name)}${r.name === currentUser?.name ? ' <span style="font-size:0.7rem;color:var(--accent)">(toi)</span>' : ''}</span>
+        ${r.hosted   ? `<span style="font-size:0.75rem;background:rgba(245,158,11,0.15);color:#d97706;border-radius:12px;padding:0.2rem 0.5rem">🏠 ×${r.hosted}</span>` : ''}
+        ${r.attending ? `<span style="font-size:0.75rem;background:rgba(16,185,129,0.15);color:#059669;border-radius:12px;padding:0.2rem 0.5rem">🍺 ×${r.attending}</span>` : ''}
+        <span style="font-size:0.75rem;color:var(--text-dim)">${escHtml(r.label)}</span>
+      </div>`
+    ).join('') +
+  `</div>`;
+}
 
 // ============================================================
 // Twemoji — rendu uniforme des drapeaux sur tous les appareils
